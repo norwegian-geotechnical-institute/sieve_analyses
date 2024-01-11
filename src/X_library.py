@@ -6,6 +6,8 @@ Created on Thu Jan 11 15:16:46 2024
 """
 
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FormatStrFormatter
+
 import numpy as np
 
 
@@ -46,7 +48,7 @@ class laboratory:
         statistical dsitributions'''
         # initializing random values
         if distribution == 'normal':
-            diameters = np.random.normal(loc=0, scale=0.1, size=n)  # [mm]
+            diameters = np.random.normal(loc=0, scale=0.2, size=n)  # [mm]
             diameters = np.where(diameters < 0, diameters*-1, diameters)
         elif distribution == 'exponential':
             diameters = np.random.exponential(scale=3, size=n)  # [mm]
@@ -55,7 +57,7 @@ class laboratory:
         elif distribution == 'uniform':
             diameters = np.random.uniform(0, 100, size=n)
         elif distribution == 'lognormal':
-            diameters = np.random.lognormal(mean=-2, sigma=1.5, size=n)
+            diameters = np.random.lognormal(mean=0, sigma=1, size=n)
         elif distribution == 'combined':
             clay_to_silt_samples = np.random.lognormal(mean=1.5, sigma=0.5,
                                                        size=n)
@@ -97,7 +99,9 @@ class plotter(laboratory):
     def __init__(self):
         pass
 
-    def required_weight_plot(self, savepath):
+    def required_weight_plot(self, savepath: str) -> None:
+        '''plot that shows the theoretically required sample weight acc. to the
+        standards'''
         sizes = np.arange(200)  # [mm]
         weights = [self.calc_required_sample_weight([ds])/1000 for ds in sizes]
 
@@ -106,6 +110,77 @@ class plotter(laboratory):
         ax.grid(alpha=0.5)
         ax.set_xlabel('max. grain diameter [mm]')
         ax.set_ylabel('required sample weight [kg]\nacc. to ISO 17892-4')
+        plt.tight_layout()
+        plt.savefig(savepath)
+        plt.close()
+
+    def distances_plot(self, grain_diameters: np.array, sample_diameters: list,
+                       req_sample_weights: list, wasserstein_distances: list,
+                       energy_distances: list, savepath: str) -> None:
+        fig, (ax1, ax2) = plt.subplots(figsize=(12, 6), nrows=1, ncols=2)
+
+        ax1.hist(grain_diameters, bins=30, edgecolor='black', color='C0',
+                 label='true soil', density=True)
+        ax1.hist(sample_diameters[0], bins=30, edgecolor='black', color='C1',
+                 label=f'sample acc. standards: {round(req_sample_weights[0], 1)}kg',
+                 alpha=0.5, density=True)
+        ax1.hist(sample_diameters[-3], bins=30, edgecolor='black', color='C2',
+                 label=f'{round(req_sample_weights[-3], 1)}kg',
+                 alpha=0.3, density=True)
+        ax1.set_xlabel('grain diameters [mm]')
+        ax1.legend()
+        ax1.grid(alpha=0.5)
+
+        ax2.scatter(req_sample_weights, wasserstein_distances, color='C0',
+                    edgecolor='black', s=60)
+        ax2.grid(alpha=0.5)
+        ax2.set_xlabel('sample weight [kg]')
+        ax2.set_ylabel('wasserstein distance', color='C0')
+
+        ax2_2 = ax2.twinx()
+        ax2_2.scatter(req_sample_weights, energy_distances, color='C1',
+                      edgecolor='black', s=60, marker='v')
+        ax2_2.set_ylabel('energy distance', color='C1')
+
+        plt.tight_layout()
+        plt.savefig(savepath)
+        plt.close()
+
+    def sieve_curves_plot(self, SIEVE_SIZES: list, fractions_true: list,
+                          sieved_samples: list, req_sample_weights: list,
+                          wasserstein_distances: list, energy_distances: list,
+                          d60: float, d30: float, d10: float, Cu: float,
+                          Cc: float, grain_diameters: np.array,
+                          standard_sample_weight: float, DISTRIBUTION: str,
+                          savepath: str) -> None:
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.plot(SIEVE_SIZES, fractions_true, label="sieve curve real",
+                color='black', lw=5)
+
+        for i in range(len(sieved_samples)):
+            ax.plot(SIEVE_SIZES, sieved_samples[i],
+                    label=f"sample {round(req_sample_weights[i], 1)}kg,\
+                    wd: {round(wasserstein_distances[i], 3)},\
+                    ed: {round(energy_distances[i], 3)}",
+                    alpha=0.8)
+
+        ax.plot([0.002, d60, d60], [60, 60, 0], color='black')
+        ax.plot([0.002, d30, d30], [30, 30, 0], color='black')
+        ax.plot([0.002, d10, d10], [10, 10, 0], color='black')
+
+        text = f'd60: {round(d60, 1)}\nd30: {round(d30, 1)}\nd10: {round(d10, 1)}\nCu: {round(Cu, 1)}\nCc: {round(Cc, 1)}'
+        ax.text(x=0.003, y=5, s=text, backgroundcolor='white')
+
+        ax.set_xscale('log')
+        ax.set_xlim(left=0.002, right=630)
+        ax.set_ylim(bottom=0, top=101)
+        ax.set_xticks([0.006, 0.02, 0.06, 2, 63])
+        ax.set_xlabel('grain size [mm]')
+        ax.set_ylabel('[%]')
+        ax.set_title(f'max grain size: {round(max(grain_diameters), 1)} mm, ISO required sample weight: {round(standard_sample_weight, 1)} kg, distribution: {DISTRIBUTION}')
+        ax.grid(alpha=0.5)
+        ax.xaxis.set_major_formatter(FormatStrFormatter('%.3f'))
+        ax.legend(loc='upper left')
         plt.tight_layout()
         plt.savefig(savepath)
         plt.close()
