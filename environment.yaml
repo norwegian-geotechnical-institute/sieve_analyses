@@ -1,0 +1,14 @@
+name: sieve_analyses
+channels:
+- conda-forge
+- defaults
+dependencies:
+- python=3.12
+- matplotlib
+- numpy
+- openpyxl
+- pandas
+- pip
+- scikit-learn
+- scipy
+- spyder-kernels=2.4
