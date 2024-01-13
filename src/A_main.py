@@ -7,11 +7,9 @@ Author: Georg H. Erharter (georg.erharter@ngi.no)
 
 # importing libraries
 import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 from scipy.stats import wasserstein_distance, energy_distance
 
-from X_library import laboratory, plotter
+from X_library import laboratory, plotter, statistics
 
 
 ###############################
@@ -19,7 +17,7 @@ from X_library import laboratory, plotter
 ###############################
 
 # constant values and hyperparameters
-N = 10_000_000  # number of grains to choose from
+N = 20_000_000  # number of grains to choose from
 DENSITY = 2.5  # grain density [g/cm3]
 SIEVE_SIZES = [0.04, 0.1, 0.25, 0.425, 0.85, 2, 4.75, 10, 20, 50, 100, 150, 200, 300]  # sieve sizes [mm]
 DISTRIBUTION = 'combined'  #  normal, exponential, beta, uniform, lognormal, combined
@@ -31,7 +29,7 @@ FRACTIONS = [1, 0.75, 0.5, 0.25, 0.1, 0.05, 0.01]
 ###############################
 
 # instantiations
-lab, pltr = laboratory(), plotter()
+lab, pltr, stat = laboratory(), plotter(), statistics()
 
 np.random.seed(SEED)  # fix seed for reproducibility
 
@@ -44,23 +42,23 @@ standard_sample_weight = lab.calc_required_sample_weight(grain_diameters) / 1000
 print(DISTRIBUTION)
 print(f'total weight: {sum(grain_weights)}')
 print(f'required weight: {round(standard_sample_weight, 3)} kg')
-# break if more material is required than available
+# break code if more material is required than available
 if standard_sample_weight > sum(grain_weights):
     raise ValueError('required sample weight larger than total weight')
 
 fractions_true = lab.sieve(grain_ids, grain_diameters, grain_weights,
                            SIEVE_SIZES)
-
+# calculate geometrical properites of soil distribution
 d60 = np.interp(60, fractions_true, SIEVE_SIZES)
 d30 = np.interp(30, fractions_true, SIEVE_SIZES)
 d10 = np.interp(10, fractions_true, SIEVE_SIZES)
-
 Cu = d60/d10
 Cc = (d30**2)/(d60*d10)
 
 req_sample_weights = []
 wasserstein_distances = []
 energy_distances = []
+ks_distances = []
 sieved_samples = []
 sample_diameters = []
 
@@ -72,6 +70,7 @@ for sample_fraction in FRACTIONS:
         req_sample_weight, grain_weights, grain_diameters)
     wd = wasserstein_distance(grain_diameters, sample_diameter)
     ed = energy_distance(grain_diameters, sample_diameter)
+    ks = stat.ks_statistic(grain_diameters, sample_diameter)
     sieved_sample = lab.sieve(sample_ids, sample_diameter, sample_weights,
                               SIEVE_SIZES)
     # collect results
@@ -79,6 +78,7 @@ for sample_fraction in FRACTIONS:
     sample_diameters.append(sample_diameter)
     wasserstein_distances.append(wd)
     energy_distances.append(ed)
+    ks_distances.append(ks)
     sieved_samples.append(sieved_sample)
 
 ###############################
@@ -87,13 +87,13 @@ for sample_fraction in FRACTIONS:
 
 pltr.distances_plot(
     grain_diameters, sample_diameters, req_sample_weights,
-    wasserstein_distances, energy_distances,
+    wasserstein_distances, energy_distances, ks_distances,
     savepath=fr'../figures/{DISTRIBUTION}_{SEED}_distances.jpg')
 
 pltr.sieve_curves_plot(
     SIEVE_SIZES, fractions_true, sieved_samples, req_sample_weights,
-    wasserstein_distances, energy_distances, d60, d30, d10, Cu, Cc,
-    grain_diameters, standard_sample_weight, DISTRIBUTION,
+    wasserstein_distances, energy_distances, d60, d30, d10, Cu,
+    Cc, grain_diameters, standard_sample_weight, DISTRIBUTION,
     savepath=fr'../figures/{DISTRIBUTION}_{SEED}_sample.jpg')
 
 # plot for GBV proposal to visualize theoretically required sample mass

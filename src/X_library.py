@@ -94,6 +94,30 @@ class laboratory:
         return fractions
 
 
+class statistics:
+
+    def __init__(self):
+        pass
+
+    def calc_cdf(self, data):
+        '''calculate cumulative density function of data'''
+        count, bins_count = np.histogram(data, bins=50)
+        # finding the PDF of the histogram using count values
+        pdf = count / sum(count)
+        # using numpy np.cumsum to calculate the CDF
+        cdf = np.cumsum(pdf)
+        return cdf
+
+    def ks_statistic(self, data1, data2):
+        '''calculate Kolmogorov-Smirnov (KS) statistic'''
+        # Calculate the empirical CDFs of the two datasets
+        cdf1 = self.calc_cdf(data1)
+        cdf2 = self.calc_cdf(data2)
+        # Calculate the maximum vertical distance between the CDFs
+        ks_statistic = np.max(np.abs(cdf1 - cdf2))
+        return ks_statistic
+
+
 class plotter(laboratory):
 
     def __init__(self):
@@ -116,7 +140,8 @@ class plotter(laboratory):
 
     def distances_plot(self, grain_diameters: np.array, sample_diameters: list,
                        req_sample_weights: list, wasserstein_distances: list,
-                       energy_distances: list, savepath: str) -> None:
+                       energy_distances: list, ks_distances: list,
+                       savepath: str) -> None:
         fig, (ax1, ax2) = plt.subplots(figsize=(12, 6), nrows=1, ncols=2)
 
         ax1.hist(grain_diameters, bins=30, edgecolor='black', color='C0',
@@ -131,16 +156,22 @@ class plotter(laboratory):
         ax1.legend()
         ax1.grid(alpha=0.5)
 
-        ax2.scatter(req_sample_weights, wasserstein_distances, color='C0',
+        ax2.scatter(req_sample_weights, ks_distances, color='C0',
                     edgecolor='black', s=60)
         ax2.grid(alpha=0.5)
         ax2.set_xlabel('sample weight [kg]')
-        ax2.set_ylabel('wasserstein distance', color='C0')
+        ax2.set_ylabel('kolmogorov smirnov distance', color='C0')
 
-        ax2_2 = ax2.twinx()
-        ax2_2.scatter(req_sample_weights, energy_distances, color='C1',
-                      edgecolor='black', s=60, marker='v')
-        ax2_2.set_ylabel('energy distance', color='C1')
+        # ax2.scatter(req_sample_weights, wasserstein_distances, color='C0',
+        #             edgecolor='black', s=60)
+        # ax2.grid(alpha=0.5)
+        # ax2.set_xlabel('sample weight [kg]')
+        # ax2.set_ylabel('wasserstein distance', color='C0')
+
+        # ax2_2 = ax2.twinx()
+        # ax2_2.scatter(req_sample_weights, energy_distances, color='C1',
+        #               edgecolor='black', s=60, marker='v')
+        # ax2_2.set_ylabel('energy distance', color='C1')
 
         plt.tight_layout()
         plt.savefig(savepath)
