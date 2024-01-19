@@ -179,9 +179,9 @@ class plotter(laboratory):
 
     def sieve_curves_plot(self, SIEVE_SIZES: list, fractions_true: list,
                           sieved_samples: list, req_sample_weights: list,
-                          wasserstein_distances: list, energy_distances: list,
-                          d60: float, d30: float, d10: float, Cu: float,
-                          Cc: float, grain_diameters: np.array,
+                          ks_distances: list, d60: float, d30: float,
+                          d10: float, Cu: float, Cc: float,
+                          grain_diameters: np.array,
                           standard_sample_weight: float, DISTRIBUTION: str,
                           savepath: str) -> None:
         fig, ax = plt.subplots(figsize=(10, 5))
@@ -191,8 +191,7 @@ class plotter(laboratory):
         for i in range(len(sieved_samples)):
             ax.plot(SIEVE_SIZES, sieved_samples[i],
                     label=f"sample {round(req_sample_weights[i], 1)}kg,\
-                    wd: {round(wasserstein_distances[i], 3)},\
-                    ed: {round(energy_distances[i], 3)}",
+                    ks distance: {round(ks_distances[i], 3)}",
                     alpha=0.8)
 
         ax.plot([0.002, d60, d60], [60, 60, 0], color='black')

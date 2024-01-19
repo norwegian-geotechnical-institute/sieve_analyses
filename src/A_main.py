@@ -20,7 +20,7 @@ from X_library import laboratory, plotter, statistics
 N = 20_000_000  # number of grains to choose from
 DENSITY = 2.5  # grain density [g/cm3]
 SIEVE_SIZES = [0.04, 0.1, 0.25, 0.425, 0.85, 2, 4.75, 10, 20, 50, 100, 150, 200, 300]  # sieve sizes [mm]
-DISTRIBUTION = 'combined'  #  normal, exponential, beta, uniform, lognormal, combined
+DISTRIBUTION = 'lognormal'  #  normal, exponential, beta, uniform, lognormal, combined
 SEED = 0
 FRACTIONS = [1, 0.75, 0.5, 0.25, 0.1, 0.05, 0.01]
 
@@ -92,8 +92,8 @@ pltr.distances_plot(
 
 pltr.sieve_curves_plot(
     SIEVE_SIZES, fractions_true, sieved_samples, req_sample_weights,
-    wasserstein_distances, energy_distances, d60, d30, d10, Cu,
-    Cc, grain_diameters, standard_sample_weight, DISTRIBUTION,
+    ks_distances, d60, d30, d10, Cu, Cc, grain_diameters,
+    standard_sample_weight, DISTRIBUTION,
     savepath=fr'../figures/{DISTRIBUTION}_{SEED}_sample.jpg')
 
 # plot for GBV proposal to visualize theoretically required sample mass
