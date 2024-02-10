@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Script to make virtual grain size analyses with different sample sizes
+Script to make individual virtual grain size analyses with different sample
+masses and different underlzing distributions.
 
 Author: Georg H. Erharter (georg.erharter@ngi.no)
 """
@@ -8,7 +9,7 @@ Author: Georg H. Erharter (georg.erharter@ngi.no)
 # importing libraries
 import numpy as np
 from scipy.stats import wasserstein_distance, energy_distance
-
+# importing custom libraries from file "X_library.py"
 from X_library import laboratory, plotter, statistics
 
 
@@ -17,12 +18,14 @@ from X_library import laboratory, plotter, statistics
 ###############################
 
 # constant values and hyperparameters
-N = 20_000_000  # number of grains to choose from
+N = 20_000_000  # number of grains of underlying soil distribution
 DENSITY = 2.5  # grain density [g/cm3]
 SIEVE_SIZES = [0.04, 0.1, 0.25, 0.425, 0.85, 2, 4.75, 10, 20, 50, 100, 150, 200, 300]  # sieve sizes [mm]
+# underlying soil distribution shape
 DISTRIBUTION = 'lognormal'  #  normal, exponential, beta, uniform, lognormal, combined
-SEED = 0
+# fractions of the ISO required sample mass that are analyzed
 FRACTIONS = [1, 0.75, 0.5, 0.25, 0.1, 0.05, 0.01]
+SEED = 0  # random seed for reproducibility
 
 ###############################
 # main code execution
@@ -48,12 +51,9 @@ if standard_sample_weight > sum(grain_weights):
 
 fractions_true = lab.sieve(grain_ids, grain_diameters, grain_weights,
                            SIEVE_SIZES)
-# calculate geometrical properites of soil distribution
-d60 = np.interp(60, fractions_true, SIEVE_SIZES)
-d30 = np.interp(30, fractions_true, SIEVE_SIZES)
-d10 = np.interp(10, fractions_true, SIEVE_SIZES)
-Cu = d60/d10
-Cc = (d30**2)/(d60*d10)
+# calculate grading characteristics of soil distribution
+d10, d12, d30, d50, d60, Cu, Cc, S0 = lab.calc_grading_characteristics(
+    fractions_true, SIEVE_SIZES)
 
 req_sample_weights = []
 wasserstein_distances = []
@@ -68,6 +68,7 @@ for sample_fraction in FRACTIONS:
     req_sample_weight = standard_sample_weight*sample_fraction
     sample_ids, sample_weights, sample_diameter = lab.get_sample(
         req_sample_weight, grain_weights, grain_diameters)
+    # calculate distribution - distribution distance metrics
     wd = wasserstein_distance(grain_diameters, sample_diameter)
     ed = energy_distance(grain_diameters, sample_diameter)
     ks = stat.ks_statistic(grain_diameters, sample_diameter)
@@ -86,8 +87,7 @@ for sample_fraction in FRACTIONS:
 ###############################
 
 pltr.distances_plot(
-    grain_diameters, sample_diameters, req_sample_weights,
-    wasserstein_distances, energy_distances, ks_distances,
+    grain_diameters, sample_diameters, req_sample_weights, ks_distances,
     savepath=fr'../figures/{DISTRIBUTION}_{SEED}_distances.jpg')
 
 pltr.sieve_curves_plot(
@@ -96,5 +96,5 @@ pltr.sieve_curves_plot(
     standard_sample_weight, DISTRIBUTION,
     savepath=fr'../figures/{DISTRIBUTION}_{SEED}_sample.jpg')
 
-# plot for GBV proposal to visualize theoretically required sample mass
-# pltr.required_weight_plot('../figures/required_weight.svg')
+# plot to visualize theoretically required sample mass
+pltr.required_weight_plot(300, '../figures/required_weight.svg')

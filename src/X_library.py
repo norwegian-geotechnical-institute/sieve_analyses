@@ -1,20 +1,22 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jan 11 15:16:46 2024
+Custom libraries for simulated sieve analyses to develop a new way to determine
+minimum required soil sample masses.
+Libraries:
+    laboratory ... contains functions for simulated lab analyses
+    statistics ... contains statistical functions for analyses
+    plotter ... makes figures
 
-@author: GEr
+Author: Georg H. Erharter (georg.erharter@ngi.no)
 """
 
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
-
 import numpy as np
+import pandas as pd
 
 
 class laboratory:
-
-    def __init__(self):
-        pass
 
     def calc_required_sample_weight(self, diameters: np.array) -> float:
         '''calculate required sample weight acc. to ISO 17892-4'''
@@ -43,7 +45,9 @@ class laboratory:
             sample_id += 1
         return np.array(sample_ids), grain_weight[sample_ids], grain_diameters[sample_ids]
 
-    def make_grains(self, n: int, density: float, distribution: str) -> list:
+    def make_grains(self, n: int, density: float, distribution: str,
+                    lognorm_mean: float = 0, lognorm_sigma: float = 1,
+                    verbose: bool = True) -> list:
         '''make the initial distribution of grains following different
         statistical dsitributions'''
         # initializing random values
@@ -57,7 +61,8 @@ class laboratory:
         elif distribution == 'uniform':
             diameters = np.random.uniform(0, 100, size=n)
         elif distribution == 'lognormal':
-            diameters = np.random.lognormal(mean=0, sigma=1, size=n)
+            diameters = np.random.lognormal(mean=lognorm_mean,
+                                            sigma=lognorm_sigma, size=n)
         elif distribution == 'combined':
             clay_to_silt_samples = np.random.lognormal(mean=1.5, sigma=0.5,
                                                        size=n)
@@ -71,7 +76,8 @@ class laboratory:
 
         diameters = np.where(diameters < 0.002, 0.002, diameters)
         diameters = np.where(diameters > 300, 300, diameters)
-        print(f'grain size min: {diameters.min()}, max: {diameters.max()} mm')
+        if verbose is True:
+            print(f'grain size min: {diameters.min()}, max: {diameters.max()} mm')
         volumes = (4/3)*np.pi*(diameters/2)**3  # [mm3]
         volumes = volumes / 1000  # [cm3]
         weights = volumes * density / 1000  # [kg]
@@ -93,11 +99,53 @@ class laboratory:
             fractions.append(fraction)
         return fractions
 
+    def calc_grading_characteristics(self, fractions_true: list,
+                                     SIEVE_SIZES: list) -> list:
+        '''function computes different metrics about the grading of a soil'''
+        d75 = np.interp(75, fractions_true, SIEVE_SIZES)
+        d60 = np.interp(60, fractions_true, SIEVE_SIZES)
+        d50 = np.interp(50, fractions_true, SIEVE_SIZES)
+        d30 = np.interp(30, fractions_true, SIEVE_SIZES)
+        d25 = np.interp(25, fractions_true, SIEVE_SIZES)
+        d12 = np.interp(12, fractions_true, SIEVE_SIZES)
+        d10 = np.interp(10, fractions_true, SIEVE_SIZES)
+        Cu = d60/d10
+        Cc = (d30**2)/(d60*d10)
+        S0 = np.sqrt(d75/d25)
+        return d10, d12, d30, d50, d60, Cu, Cc, S0
+
+    def USCS_classification(self, d12: float, d50: float, Cu: float,
+                            Cc: float) -> str:
+        '''function determines the soil class according to the unified soil
+        classification system'''
+        # 50% or more passes the no. 200 Sieve
+        if d50 <= 0.075:  # [mm]
+            soil_class = 'fines'
+        # 50% or more of coarse fraction passes No.4 sieve
+        elif d50 <= 4.75:
+            if d12 <= 0.075:
+                soil_class = 'S_dirty'
+            else:
+                if Cu >= 6 and Cc <= 3 and Cc >= 1:
+                    soil_class = 'SW'
+                elif Cu < 6 or Cc < 1 or Cc > 3:
+                    soil_class = 'SP'
+        # More than 50% of coarse fraction on No. 4 Sieve
+        elif d50 > 4.75:
+            if d12 <= 0.075:
+                soil_class = 'G_dirty'
+            else:
+                if Cu >= 4 and Cc <= 3 and Cc >= 1:
+                    soil_class = 'GW'
+                elif Cu < 4 or Cc < 1 or Cc > 3:
+                    soil_class = 'GP'
+        else:
+            soil_class = 'undefined'
+
+        return soil_class
+
 
 class statistics:
-
-    def __init__(self):
-        pass
 
     def calc_cdf(self, data):
         '''calculate cumulative density function of data'''
@@ -120,13 +168,11 @@ class statistics:
 
 class plotter(laboratory):
 
-    def __init__(self):
-        pass
-
-    def required_weight_plot(self, savepath: str) -> None:
+    def required_weight_plot(self, max_grain_size: float, savepath: str,
+                             close: bool = True) -> None:
         '''plot that shows the theoretically required sample weight acc. to the
         standards'''
-        sizes = np.arange(200)  # [mm]
+        sizes = np.arange(max_grain_size)  # [mm]
         weights = [self.calc_required_sample_weight([ds])/1000 for ds in sizes]
 
         fig, ax = plt.subplots(figsize=(3, 3))
@@ -134,14 +180,17 @@ class plotter(laboratory):
         ax.grid(alpha=0.5)
         ax.set_xlabel('max. grain diameter [mm]')
         ax.set_ylabel('required sample weight [kg]\nacc. to ISO 17892-4')
+
         plt.tight_layout()
         plt.savefig(savepath)
-        plt.close()
+        if close is True:
+            plt.close()
 
     def distances_plot(self, grain_diameters: np.array, sample_diameters: list,
-                       req_sample_weights: list, wasserstein_distances: list,
-                       energy_distances: list, ks_distances: list,
-                       savepath: str) -> None:
+                       req_sample_weights: list, ks_distances: list,
+                       savepath: str, close: bool = True) -> None:
+        '''plot an underlying soil distribution vs. distributions of different
+        samples with reduced mass and also their kolmogorov smirnov distance'''
         fig, (ax1, ax2) = plt.subplots(figsize=(12, 6), nrows=1, ncols=2)
 
         ax1.hist(grain_diameters, bins=30, edgecolor='black', color='C0',
@@ -162,20 +211,10 @@ class plotter(laboratory):
         ax2.set_xlabel('sample weight [kg]')
         ax2.set_ylabel('kolmogorov smirnov distance', color='C0')
 
-        # ax2.scatter(req_sample_weights, wasserstein_distances, color='C0',
-        #             edgecolor='black', s=60)
-        # ax2.grid(alpha=0.5)
-        # ax2.set_xlabel('sample weight [kg]')
-        # ax2.set_ylabel('wasserstein distance', color='C0')
-
-        # ax2_2 = ax2.twinx()
-        # ax2_2.scatter(req_sample_weights, energy_distances, color='C1',
-        #               edgecolor='black', s=60, marker='v')
-        # ax2_2.set_ylabel('energy distance', color='C1')
-
         plt.tight_layout()
         plt.savefig(savepath)
-        plt.close()
+        if close is True:
+            plt.close()
 
     def sieve_curves_plot(self, SIEVE_SIZES: list, fractions_true: list,
                           sieved_samples: list, req_sample_weights: list,
@@ -183,7 +222,9 @@ class plotter(laboratory):
                           d10: float, Cu: float, Cc: float,
                           grain_diameters: np.array,
                           standard_sample_weight: float, DISTRIBUTION: str,
-                          savepath: str) -> None:
+                          savepath: str, close: bool = True) -> None:
+        '''plot sieve curves of underlying soil distribution and taken
+        samples'''
         fig, ax = plt.subplots(figsize=(10, 5))
         ax.plot(SIEVE_SIZES, fractions_true, label="sieve curve real",
                 color='black', lw=5)
@@ -211,6 +252,55 @@ class plotter(laboratory):
         ax.grid(alpha=0.5)
         ax.xaxis.set_major_formatter(FormatStrFormatter('%.3f'))
         ax.legend(loc='upper left')
+
         plt.tight_layout()
         plt.savefig(savepath)
-        plt.close()
+        if close is True:
+            plt.close()
+
+    def monte_carlo_scatterplot(self, df: pd.DataFrame,
+                                savepath: str, close: bool = True) -> None:
+        '''scatterplot that shows results of the monte carlo simulations in the
+        form of different soil distribution parameters Cu, Cc etc. vs. a metric
+        of how well the sample fits the underlying distribution'''
+        fig, (ax1, ax2, ax3, ax4) = plt.subplots(nrows=1, ncols=4,
+                                                 figsize=(20, 6))
+        for sc in df.groupby('USCS soil classes'):
+            ax1.scatter(sc[1]['Cu true'], sc[1]['kolmogorov smirnov distance'],
+                        alpha=0.5, label=sc[0])
+            ax2.scatter(sc[1]['Cc true'], sc[1]['kolmogorov smirnov distance'],
+                        alpha=0.5, label=sc[0])
+            ax3.scatter(sc[1]['S0 true'], sc[1]['kolmogorov smirnov distance'],
+                        alpha=0.5, label=sc[0])
+            ax4.scatter(sc[1]['max diameter true [mm]'],
+                        sc[1]['kolmogorov smirnov distance'],
+                        alpha=0.5, label=sc[0])
+
+        ax1.grid(alpha=0.5)
+        ax1.set_ylabel('kolmogorov smirnov distance')
+        ax1.set_xlabel('coefficient of uniformity\nCu  d60/d10')
+        ax1.set_yscale('log')
+        ax1.legend()
+
+        ax2.grid(alpha=0.5)
+        ax2.set_ylabel('kolmogorov smirnov distance')
+        ax2.set_xlabel('coefficient of curvature\nCc  d30**2/(d60*d10)')
+        ax2.set_yscale('log')
+        ax2.legend()
+
+        ax3.grid(alpha=0.5)
+        ax3.set_ylabel('kolmogorov smirnov distance')
+        ax3.set_xlabel('sorting coefficient\nS0 sqrt(d75/d25)')
+        ax3.set_yscale('log')
+        ax3.legend()
+
+        ax4.grid(alpha=0.5)
+        ax4.set_ylabel('kolmogorov smirnov distance')
+        ax4.set_xlabel('maximum soil grainsize [mm]')
+        ax4.set_yscale('log')
+        ax4.legend()
+
+        plt.tight_layout()
+        plt.savefig(savepath)
+        if close is True:
+            plt.close()

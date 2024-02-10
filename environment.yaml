@@ -11,4 +11,5 @@ dependencies:
 - pip
 - scikit-learn
 - scipy
-- spyder-kernels=2.4
+- spyder-kernels=2.5
+- tqdm
