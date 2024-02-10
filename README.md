@@ -9,6 +9,7 @@ The goal of this project is to develop a new recommendation for minimum required
 The investigation is conducted by the **Norwegian Geotechnical Institute (NGI)** together with the **Graz University of Technology - Institute of Soil Mechanics, Foundation Engineering and Computational Geotechnics (IBG)**
 - **NGI**: Georg H. Erharter, Diana Cordeiro, Santiago Quinteros
 - **IBG**: Franz Tschuchnigg, Matthias Rebhan
+
 contact: georg.erharter@ngi.no
 
 ## Requirements
