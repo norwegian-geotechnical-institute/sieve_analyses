@@ -12,16 +12,16 @@ Author: Georg H. Erharter (georg.erharter@ngi.no)
 
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 import pandas as pd
 
 
 class laboratory:
 
-    def calc_required_sample_weight(self, diameters: np.array) -> float:
+    def ISO_required_sample_weight(self, d_max: float) -> float:
         '''calculate required sample weight acc. to ISO 17892-4'''
-        d_max = max(diameters)  # [mm]
-        if d_max <= 2:
+        if d_max <= 2:  # [mm]
             weight = 100
         elif d_max <= 6.3:
             weight = 300
@@ -32,6 +32,10 @@ class laboratory:
         else:
             weight = ((d_max / 10)**2) * 1000
         return weight  # [g]
+
+    def new_sample_weight(self, S0) -> float:
+        '''tests for new sample weight calculations'''
+        return (np.log(np.log(S0)) + 3.22) * 25
 
     def get_sample(self, required_sample_weight: float, grain_weight: np.array,
                    grain_diameters: np.array) -> list:
@@ -143,6 +147,16 @@ class laboratory:
             soil_class = 'undefined'
 
         return soil_class
+
+
+class utilities:
+
+    def CheckForLess(self, list1, val):
+        '''function checks if any of values in list1 is smaller than val'''
+        for x in list1:
+            if val < x:
+                return False
+        return True
 
 
 class statistics:
@@ -258,47 +272,71 @@ class plotter(laboratory):
         if close is True:
             plt.close()
 
-    def monte_carlo_scatterplot(self, df: pd.DataFrame,
-                                savepath: str, close: bool = True) -> None:
+    def monte_carlo_scatterplot(self, df: pd.DataFrame, weight_mode: str,
+                                color_mode: str, savepath: str,
+                                close: bool = True) -> None:
         '''scatterplot that shows results of the monte carlo simulations in the
         form of different soil distribution parameters Cu, Cc etc. vs. a metric
         of how well the sample fits the underlying distribution'''
         fig, (ax1, ax2, ax3, ax4) = plt.subplots(nrows=1, ncols=4,
                                                  figsize=(20, 6))
-        for sc in df.groupby('USCS soil classes'):
-            ax1.scatter(sc[1]['Cu true'], sc[1]['kolmogorov smirnov distance'],
+        match color_mode:  # noqa
+            case 'USCS':
+                for sc in df.groupby('USCS soil classes'):
+                    ax1.scatter(
+                        sc[1]['Cu true'],
+                        sc[1][f'kolmogorov smirnov distance {weight_mode}'],
                         alpha=0.5, label=sc[0])
-            ax2.scatter(sc[1]['Cc true'], sc[1]['kolmogorov smirnov distance'],
+                    ax2.scatter(
+                        sc[1]['Cc true'],
+                        sc[1][f'kolmogorov smirnov distance {weight_mode}'],
                         alpha=0.5, label=sc[0])
-            ax3.scatter(sc[1]['S0 true'], sc[1]['kolmogorov smirnov distance'],
+                    ax3.scatter(
+                        sc[1]['S0 true'],
+                        sc[1][f'kolmogorov smirnov distance {weight_mode}'],
                         alpha=0.5, label=sc[0])
-            ax4.scatter(sc[1]['max diameter true [mm]'],
-                        sc[1]['kolmogorov smirnov distance'],
+                    ax4.scatter(
+                        sc[1]['max diameter true [mm]'],
+                        sc[1][f'kolmogorov smirnov distance {weight_mode}'],
                         alpha=0.5, label=sc[0])
+                ax1.legend()
+                ax2.legend()
+                ax3.legend()
+                ax4.legend()
+            case 'weight':
+                ax1.scatter(df['Cu true'],
+                            df[f'kolmogorov smirnov distance {weight_mode}'],
+                            c=df[f'req. weight {weight_mode} [kg]'])
+                ax2.scatter(df['Cc true'],
+                            df[f'kolmogorov smirnov distance {weight_mode}'],
+                            c=df[f'req. weight {weight_mode} [kg]'])
+                ax3.scatter(df['S0 true'],
+                            df[f'kolmogorov smirnov distance {weight_mode}'],
+                            c=df[f'req. weight {weight_mode} [kg]'])
+                im = ax4.scatter(df['max diameter true [mm]'],
+                            df[f'kolmogorov smirnov distance {weight_mode}'],
+                            c=df[f'req. weight {weight_mode} [kg]'])
+                divider = make_axes_locatable(ax4)
+                cax = divider.append_axes('right', size='5%', pad=0.05)
+                fig.colorbar(im, cax=cax, orientation='vertical',
+                             label='required sample weight [kg]')
 
         ax1.grid(alpha=0.5)
-        ax1.set_ylabel('kolmogorov smirnov distance')
+        ax1.set_ylabel(f'kolmogorov smirnov distance {weight_mode}')
         ax1.set_xlabel('coefficient of uniformity\nCu  d60/d10')
         ax1.set_yscale('log')
-        ax1.legend()
 
         ax2.grid(alpha=0.5)
-        ax2.set_ylabel('kolmogorov smirnov distance')
         ax2.set_xlabel('coefficient of curvature\nCc  d30**2/(d60*d10)')
         ax2.set_yscale('log')
-        ax2.legend()
 
         ax3.grid(alpha=0.5)
-        ax3.set_ylabel('kolmogorov smirnov distance')
         ax3.set_xlabel('sorting coefficient\nS0 sqrt(d75/d25)')
         ax3.set_yscale('log')
-        ax3.legend()
 
         ax4.grid(alpha=0.5)
-        ax4.set_ylabel('kolmogorov smirnov distance')
         ax4.set_xlabel('maximum soil grainsize [mm]')
         ax4.set_yscale('log')
-        ax4.legend()
 
         plt.tight_layout()
         plt.savefig(savepath)

@@ -41,7 +41,7 @@ grain_diameters, grain_volumes, grain_weights, grain_ids = lab.make_grains(
     N, DENSITY, DISTRIBUTION)
 
 # calculate required sample size
-standard_sample_weight = lab.calc_required_sample_weight(grain_diameters) / 1000
+standard_sample_weight = lab.ISO_required_sample_weight(grain_diameters) / 1000
 print(DISTRIBUTION)
 print(f'total weight: {sum(grain_weights)}')
 print(f'required weight: {round(standard_sample_weight, 3)} kg')
