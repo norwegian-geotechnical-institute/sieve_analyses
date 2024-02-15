@@ -306,16 +306,16 @@ class plotter(laboratory):
             case 'weight':
                 ax1.scatter(df['Cu true'],
                             df[f'kolmogorov smirnov distance {weight_mode}'],
-                            c=df[f'req. weight {weight_mode} [kg]'])
+                            c=df[f'req. weight {weight_mode} [kg]'], alpha=0.5)
                 ax2.scatter(df['Cc true'],
                             df[f'kolmogorov smirnov distance {weight_mode}'],
-                            c=df[f'req. weight {weight_mode} [kg]'])
+                            c=df[f'req. weight {weight_mode} [kg]'], alpha=0.5)
                 ax3.scatter(df['S0 true'],
                             df[f'kolmogorov smirnov distance {weight_mode}'],
-                            c=df[f'req. weight {weight_mode} [kg]'])
+                            c=df[f'req. weight {weight_mode} [kg]'], alpha=0.5)
                 im = ax4.scatter(df['max diameter true [mm]'],
                             df[f'kolmogorov smirnov distance {weight_mode}'],
-                            c=df[f'req. weight {weight_mode} [kg]'])
+                            c=df[f'req. weight {weight_mode} [kg]'], alpha=0.5)
                 divider = make_axes_locatable(ax4)
                 cax = divider.append_axes('right', size='5%', pad=0.05)
                 fig.colorbar(im, cax=cax, orientation='vertical',

@@ -26,7 +26,7 @@ SIEVE_SIZES = [0.04, 0.1, 0.25, 0.425, 0.85, 2, 4.75, 10, 20, 50, 100, 150, 200,
 DISTRIBUTION = 'lognormal'  #  normal, exponential, beta, uniform, lognormal, combined
 # weight of soil sample, either set to number for sampling always the same mass
 # in kg or set to "ISO" to sample the mass as suggested by ISO 17892-4
-N_SIMULATIONS = 2  # number of new simulations to do
+N_SIMULATIONS = 50  # number of new simulations to do
 STUDY_NAME = '2024_02_14'  # study to work with or to create
 PLOT = True  # flag to indicate if plots shall be created
 
