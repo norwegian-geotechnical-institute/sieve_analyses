@@ -19,16 +19,14 @@ from X_library import laboratory, statistics, plotter, utilities
 ###############################
 
 # number of grains of underlying soil distribution -> impacts computation
-N = 20_000_000
-DENSITY = 2.5  # grain density [g/cm3]
-SIEVE_SIZES = [0.04, 0.1, 0.25, 0.425, 0.85, 2, 4.75, 10, 20, 50, 100, 150, 200, 300]  # sieve sizes [mm]
-# underlying soil distribution shape
-DISTRIBUTION = 'lognormal'  #  normal, exponential, beta, uniform, lognormal, combined
+DENSITY = 2.65  # grain density [g/cm3]
+SIEVE_SIZES = [0.075, 0.105, 0.15, 0.25, 0.425, 0.85, 2, 4.75, 9.5, 19, 25, 37.5, 50, 75, 100, 150, 200, 300]  # sieve sizes [mm]
 # weight of soil sample, either set to number for sampling always the same mass
 # in kg or set to "ISO" to sample the mass as suggested by ISO 17892-4
-N_SIMULATIONS = 50  # number of new simulations to do
-STUDY_NAME = '2024_02_14'  # study to work with or to create
+N_SIMULATIONS = 2  # number of new simulations to do
+STUDY_NAME = '2024_02_23'  # study to work with or to create
 PLOT = True  # flag to indicate if plots shall be created
+TOT_MASS = 1256.7  # [kg]
 
 ###############################
 # main code execution
@@ -38,85 +36,94 @@ PLOT = True  # flag to indicate if plots shall be created
 lab, stat, pltr, utils = laboratory(), statistics(), plotter(), utilities()
 
 # empty lists to collect results of simulations
-d10_s, Cu_s, Cc_s, S0_s, soil_classes = [], [], [], [], []
-means, sigmas, max_diameters = [], [], []
-ks_ISO, ks_new, ks_const = [], [], []
-req_weights_ISO, req_weights_new, req_weights_const = [], [], []
+d_s, Cu_s, Cc_s, S0_s, soil_classes = [], [], [], [], []
+max_diameters, total_weights = [], []
+ks_ISO, ks_ASTM, ks_new, ks_const = [], [], [], []
+req_weights_ISO, req_weights_ASTM = [], []
+req_weights_new, req_weights_const = [], []
 
 # main simulation loop
 for i in tqdm(range(N_SIMULATIONS)):
     # generate underlying soil distribution -> so far only lognormal
-    mean = np.random.uniform(0, 3)
-    sigma = np.random.uniform(0.1, 2)
-    grain_diameters, grain_volumes, grain_weights, grain_ids = lab.make_grains(
-        N, DENSITY, DISTRIBUTION, lognorm_mean=0, lognorm_sigma=sigma,
-        verbose=False)
-    # get maximum grain diameter of soil [mm]
-    max_diameter = max(grain_diameters)
+    grain_diameters, grain_weights, grain_ids = lab.make_grains_new(
+        DENSITY, TOT_MASS)
+    # get maximum grain diameter of soil [mm] and total weight [kg]
+    max_diameter = grain_diameters.max()
+    total_weight = grain_weights.sum()
     # make sieve analysis of underlying soil distribution
     fractions_true = lab.sieve(grain_ids, grain_diameters, grain_weights,
                                SIEVE_SIZES)
     # calculate geometrical properites of underlying soil distribution
-    d10, d12, d30, d50, d60, Cu, Cc, S0 = lab.calc_grading_characteristics(
+    ds, Cu, Cc, S0 = lab.calc_grading_characteristics(
         fractions_true, SIEVE_SIZES)
     # classify underlying soil distribution acc to USCS
-    soil_class = lab.USCS_classification(d12, d50, Cu, Cc)
+    soil_class = lab.USCS_classification(ds['d12'], ds['d50'], Cu, Cc)
 
     # define sample weight [kg]
     sample_weight_ISO = lab.ISO_required_sample_weight(max_diameter) / 1000
+    sample_weight_ASTM = lab.ASTM_required_sample_weight(max_diameter) / 1000
     sample_weight_new = lab.new_sample_weight(S0)
     sample_weight_const = 10
-    req_sample_weights = [sample_weight_ISO, sample_weight_new,
-                          sample_weight_const]
+    req_sample_weights = [sample_weight_ISO, sample_weight_ASTM,
+                          sample_weight_new, sample_weight_const]
 
     # only process if the reqired sample weights are lower than the total
     # weight. problem may occur when there is a large amount of finer grained
     # sediments
-    if utils.CheckForLess(req_sample_weights, sum(grain_weights)):
+    if utils.CheckForLess(req_sample_weights, total_weight):
         # collect parameters of underlying soil distribution
-        d10_s.append(d10)
+        d_s.append(ds)
         Cu_s.append(Cu)
         Cc_s.append(Cc)
         S0_s.append(S0)
-        means.append(mean)
-        sigmas.append(sigma)
         max_diameters.append(max_diameter)
+        total_weights.append(total_weight)
         soil_classes.append(soil_class)
 
         for i, req_sample_weight in enumerate(req_sample_weights):
             # get sample out of underlying distribution acc to sample_weight
             sample_ids, sample_weights, sample_diameter = lab.get_sample(
-                req_sample_weight, grain_weights, grain_diameters)
+                req_sample_weight, total_weight, grain_weights,
+                grain_diameters)
+            sieved_sample = lab.sieve(sample_ids, sample_diameter,
+                                      sample_weights, SIEVE_SIZES)
             # compute kolmogorov smirnov distance between sample and real soil
-            ks = stat.ks_statistic(grain_diameters, sample_diameter)
+            ks = stat.ks_statistic(fractions_true, sieved_sample)
             # collect results of sampled soils
             match i:  # noqa
                 case 0:
                     ks_ISO.append(ks)
                     req_weights_ISO.append(req_sample_weight)
                 case 1:
+                    ks_ASTM.append(ks)
+                    req_weights_ASTM.append(req_sample_weight)
+                case 2:
                     ks_new.append(ks)
                     req_weights_new.append(req_sample_weight)
-                case 2:
+                case 3:
                     ks_const.append(ks)
                     req_weights_const.append(req_sample_weight)
+    else:
+        raise ValueError('required sample weight too large')
 
 # make new pandas dataframe with new simulation results
-df_new = pd.DataFrame({'d10 true [mm]': d10_s,
-                       'Cu true': Cu_s,
-                       'Cc true': Cc_s,
-                       'S0 true': S0_s,
+df_new = pd.DataFrame({'Cu': Cu_s,
+                       'Cc': Cc_s,
+                       'S0': S0_s,
                        'USCS soil classes': soil_classes,
-                       'lognorm_mean': means,
-                       'lognorm_sigma': sigmas,
-                       'max diameter true [mm]': max_diameters,
+                       'max diameter [mm]': max_diameters,
+                       'total weights [kg]': total_weights,
                        'kolmogorov smirnov distance ISO': ks_ISO,
+                       'kolmogorov smirnov distance ASTM': ks_ASTM,
                        'kolmogorov smirnov distance new': ks_new,
                        'kolmogorov smirnov distance const': ks_const,
                        'req. weight ISO [kg]': req_weights_ISO,
+                       'req. weight ASTM [kg]': req_weights_ASTM,
                        'req. weight new [kg]': req_weights_new,
                        'req. weight const [kg]': req_weights_const,
                        })
+df_ds = pd.DataFrame.from_dict(d_s)
+df_new = pd.concat((df_new, df_ds), axis=1)
 
 # either make new dataframe for new study or add to existing one & save
 try:
@@ -131,7 +138,7 @@ df.to_excel(fr'../simulations/{STUDY_NAME}.xlsx', index=False)
 ##########################
 
 if PLOT is True:
-    weight_modes = ['ISO', 'new', 'const']
+    weight_modes = ['ISO', 'ASTM', 'new', 'const']
 
     import matplotlib.pyplot as plt
 
@@ -139,7 +146,7 @@ if PLOT is True:
     ax = fig.add_subplot(projection='3d')
 
     for weight_mode in weight_modes:
-        ax.scatter(df['S0 true'],
+        ax.scatter(df['S0'],
                    df[f'kolmogorov smirnov distance {weight_mode}'],
                    df[f'req. weight {weight_mode} [kg]'], label=weight_mode)
 
