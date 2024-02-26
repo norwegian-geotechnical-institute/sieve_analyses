@@ -409,8 +409,8 @@ class plotter(laboratory):
         return np.where(np.any(overlapping, axis=1) == True)[0]
 
     def shake(self, grain_xs, grain_ys, grain_rs, BOX_SIZE):
-        delta_x = np.random.normal(loc=0, scale=grain_rs/2, size=len(grain_xs))
-        delta_y = np.random.normal(loc=0, scale=grain_rs/2, size=len(grain_ys))
+        delta_x = np.random.normal(loc=0, scale=grain_rs/10, size=len(grain_xs))
+        delta_y = np.random.normal(loc=0, scale=grain_rs/10, size=len(grain_ys))
         grain_xs += delta_x
         grain_ys += delta_y
         grain_xs = np.where(grain_xs < 0, grain_xs*-1, grain_xs)
@@ -429,12 +429,8 @@ class plotter(laboratory):
             counter = 0
             while overlapping is True:
                 counter += 1
-                if counter > 20_000:  # safety to avoid infinite loops
-                    grain_xs, grain_ys = self.shake(grain_xs, grain_ys,
-                                                    grain_rs, BOX_SIZE)
-                    print('shaked')
+                if counter > 40_000:  # safety to avoid infinite loops
                     break
-                # print('updating', grain_xs[overlap_id], grain_ys[overlap_id])
                 # choose new position from grain randomly
                 delta_x = np.random.normal(loc=0, scale=grain_rs[overlap_id])
                 delta_y = np.random.normal(loc=0, scale=grain_rs[overlap_id])
@@ -459,13 +455,13 @@ class plotter(laboratory):
 
         return grain_xs, grain_ys
 
-    def plot_grains(self, grain_diameters, BOX_SIZE, SEED, Cu, S0,
+    def plot_grains(self, grain_diameters, BOX_SIZE, SEED, Cu, S0, weight,
                     savepath: str, close: bool = True) -> None:
         # preprocessing of grains and initialize positions
         grain_diameters = grain_diameters / 1000
         grain_rs = grain_diameters / 2
 
-        if (grain_rs**2 * np.pi).sum() > BOX_SIZE**2 / 2:
+        if (grain_rs**2 * np.pi).sum() > BOX_SIZE**2 * 0.66:
             raise ValueError('too small plotting area')
 
         grain_xs = np.random.uniform(0, BOX_SIZE, len(grain_diameters))
@@ -481,10 +477,11 @@ class plotter(laboratory):
         # adjust overlapping grains
         while n_overlapping > 0:
             # number of smallest overlapping grains to relocate
-            if len(n_overlappings) > 20 and np.mean(np.diff(n_overlappings[-10:])) > -5:
+            if len(n_overlappings) > 20 and np.mean(np.diff(n_overlappings[-10:])) > -1:
                 n_smallest_grains = 1
             else:
                 n_smallest_grains = int(n_overlapping * 0.1)
+                if n_smallest_grains < 1: n_smallest_grains = 1
 
             print(n_overlapping, n_smallest_grains,
                   np.mean(np.diff(n_overlappings[-10:])))
@@ -502,7 +499,9 @@ class plotter(laboratory):
             n_overlappings.append(n_overlapping)
 
             if np.mean(np.diff(n_overlappings[-5:])) >= 0:
-                break
+                grain_xs, grain_ys = self.shake(grain_xs, grain_ys,
+                                                grain_rs, BOX_SIZE)
+                print('shaked')
         print('plotting')
         # plot grains
         fig, ax = plt.subplots(figsize=(9, 9))
@@ -518,7 +517,7 @@ class plotter(laboratory):
         ax.set_ylim(0, BOX_SIZE)
         ax.get_xaxis().set_ticks([])
         ax.get_yaxis().set_ticks([])
-        ax.set_title(f'seed {SEED}; Cu: {round(Cu, 2)}, S0: {round(S0, 2)}')
+        ax.set_title(f'seed {SEED}; Cu: {round(Cu, 2)}, S0: {round(S0, 2)}, weight: {weight} kg')
         ax.set_xlabel(f'{BOX_SIZE} meters')
 
         plt.tight_layout()

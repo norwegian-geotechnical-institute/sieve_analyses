@@ -26,7 +26,7 @@ SEED = 1  # random seed for reproducibility
 ###############################
 # main code execution
 ###############################
-
+print(f'processing seed {SEED}')
 # instantiations
 lab, pltr, stat = laboratory(), plotter(), statistics()
 
@@ -87,10 +87,11 @@ pltr.sieve_curves_plot(
     sieved_samples, req_sample_weights, ks_distances)
 
 # # make sample preview plot ... very experimental still
-# plot_sample = lab.get_sample(1, total_weight, grain_weights,
+# weight = 1.5
+# plot_sample = lab.get_sample(weight, total_weight, grain_weights,
 #                              grain_diameters)[2]
 # if len(plot_sample) < 30_000:
-#     pltr.plot_grains(plot_sample, 0.5, SEED, Cu, S0,
+#     pltr.plot_grains(plot_sample, 0.5, SEED, Cu, S0, weight,
 #                      savepath=fr'../figures/{SEED}_sample.jpg')
 # else:
 #     print('too many grains', len(plot_sample))

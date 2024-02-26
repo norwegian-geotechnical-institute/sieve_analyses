@@ -132,6 +132,7 @@ try:
 except FileNotFoundError:
     df = df_new
 df.to_excel(fr'../simulations/{STUDY_NAME}.xlsx', index=False)
+print(f'{len(df)} samples processed')
 
 ##########################
 # plot results
