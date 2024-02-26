@@ -33,7 +33,7 @@ lab, pltr, stat = laboratory(), plotter(), statistics()
 np.random.seed(SEED)  # fix seed for reproducibility
 
 # initialize ground truth sample
-grain_diameters, grain_weights, grain_ids = lab.make_grains_new(
+grain_diameters, grain_weights, grain_ids = lab.make_grains(
     DENSITY, TOT_MASS=410)
 
 total_weight = grain_weights.sum()

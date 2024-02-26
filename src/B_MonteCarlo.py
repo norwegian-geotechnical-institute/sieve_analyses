@@ -45,7 +45,7 @@ req_weights_new, req_weights_const = [], []
 # main simulation loop
 for i in tqdm(range(N_SIMULATIONS)):
     # generate underlying soil distribution -> so far only lognormal
-    grain_diameters, grain_weights, grain_ids = lab.make_grains_new(
+    grain_diameters, grain_weights, grain_ids = lab.make_grains(
         DENSITY, TOT_MASS)
     # get maximum grain diameter of soil [mm] and total weight [kg]
     max_diameter = grain_diameters.max()
