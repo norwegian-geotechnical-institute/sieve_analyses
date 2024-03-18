@@ -15,9 +15,18 @@ import matplotlib.ticker as ticker
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 
-class laboratory:
+class statistics:
+
+    def ks_statistic(self, sieve_curve1: list, sieve_curve2: list) -> float:
+        '''calculate Kolmogorov-Smirnov (KS) statistic for 2 sieve curves'''
+        # Calculate the maximum vertical distance between the sieve curves
+        return np.max(np.abs(np.array(sieve_curve1) - np.array(sieve_curve2)))
+
+
+class laboratory(statistics):
 
     def ISO_required_sample_weight(self, d_max: float) -> float:
         '''calculate required sample weight acc. to ISO 17892-4'''
@@ -55,22 +64,43 @@ class laboratory:
             weight = m * 100 * 1000
         return weight  # [g]
 
-    def new_sample_weight(self, S0) -> float:
-        '''tests for new sample weight calculations'''
-        return (np.log(np.log(S0)) + 3.22) * 25
+    def new_sample_weight(self, d_max: float, d90: float,
+                          exponent: float = 2) -> float:
+        '''new equation to determine sample weight based on d90'''
+        if d_max <= 2:  # [mm]
+            weight = 100
+        elif d_max <= 6.3:
+            weight = 300
+        elif d_max <= 10:
+            weight = 500
+        elif d_max <= 20:
+            weight = 2000
+        else:
+            weight = ((d90 / 10)**exponent) * 1000
+        return weight  # [g]
 
     def get_sample(self, required_sample_weight: float, total_weight: float,
-                   grain_weights: np.array, grain_diameters: np.array) -> list:
+                   grain_weights: np.array, grain_diameters: np.array,
+                   strategy: str = 'random choice') -> list:
         '''get a sample with a specific weight from the total number of grains
         by gathering single grains until th desired weight is reached'''
+
         fraction = required_sample_weight / total_weight
-        split = int(len(grain_diameters)*fraction)
-        sample_ids = np.arange(split)
-        sample_weights = grain_weights[:split]
-        sample_diameters = grain_diameters[:split]
+        match strategy:  # noqa
+            case 'from start':
+                split = int(len(grain_diameters)*fraction)
+                sample_ids = np.arange(split)
+                sample_weights = grain_weights[:split]
+                sample_diameters = grain_diameters[:split]
+            case 'random choice':
+                n_grains = int(len(grain_diameters)*fraction)
+                sample_ids = np.random.choice(np.arange(len(grain_diameters)),
+                                              size=n_grains, replace=False)
+                sample_weights = grain_weights[sample_ids]
+                sample_diameters = grain_diameters[sample_ids]
         return sample_ids, sample_weights, sample_diameters
 
-    def make_grains(self, DENSITY: float, TOT_MASS: float,
+    def make_grains_old(self, DENSITY: float, TOT_MASS: float,
                         verbose: bool = False) -> list:
         '''function generates a new soil sample'''
 
@@ -124,8 +154,56 @@ class laboratory:
         ids = np.arange(len(diameters))
         return diameters, weights, ids
 
+    def make_grains(self, DENSITY: float, TOT_MASS: float,
+                    min_d: float = 1, max_d: float = 200,
+                    verbose: bool = False) -> list:
+        '''function generates a new soil sample'''
+
+        def make_beta(lower, upper, n):
+            x = np.random.beta(a=np.random.uniform(1, 5),
+                               b=np.random.uniform(1, 5), size=n)
+            x = x*(upper-lower)
+            return x + lower
+
+        fractions = np.random.uniform(0, 1, np.random.randint(1, 6))
+        fractions = fractions / sum(fractions)
+        fractions = np.sort(fractions)
+
+        diameters = []
+        tot_weight = 0
+
+        for i in range(len(fractions)):
+            lower, upper = sorted(np.exp(np.random.uniform(np.log(min_d),
+                                                           np.log(max_d), 2)))
+            while tot_weight < sum(fractions[:i+1]) * TOT_MASS:
+                if upper < 3:
+                    n_grains = 2000
+                elif upper < 6:
+                    n_grains = 200
+                elif upper < 18:
+                    n_grains = 50
+                elif upper < 60:
+                    n_grains = 10
+                else:
+                    n_grains = 1
+                diameter = make_beta(lower, upper, n_grains)
+                volume = ((4/3)*np.pi*((diameter/2)**3)) / 1000  # [cm3]
+                try:
+                    tot_weight += volume.sum() * DENSITY / 1000
+                except AttributeError:
+                    tot_weight += volume * DENSITY / 1000
+                diameters.append(diameter)
+
+        diameters = np.hstack(diameters)
+        np.random.shuffle(diameters)
+        volumes = (4/3)*np.pi*(diameters/2)**3  # [mm3]
+        volumes = volumes / 1000  # [cm3]
+        weights = volumes * DENSITY / 1000  # [kg]
+        ids = np.arange(len(diameters))
+        return diameters, weights, ids
+
     def sieve(self, ids: np.array, diameters: np.array, weights: np.array,
-              sieve_sizes: list) -> list:
+              sieve_sizes: list) -> dict:
         '''make a virtual sieve analysis of the sample'''
         tot_weight = weights.sum()
         fractions = []
@@ -137,7 +215,7 @@ class laboratory:
             except ZeroDivisionError:
                 fraction = 0
             fractions.append(fraction)
-        return fractions
+        return dict(zip(sieve_sizes, fractions))
 
     def calc_grading_characteristics(self, fractions_true: list,
                                      SIEVE_SIZES: list) -> list:
@@ -182,6 +260,36 @@ class laboratory:
 
         return soil_class
 
+    def check_required_weight(self, max_error: float, weight_steps: float,
+                              tests_per_step: int, total_weight: float,
+                              grain_weights: np.array,
+                              grain_diameters: np.array, SIEVE_SIZES: list,
+                              fractions_true: dict,
+                              verbose: bool = False):
+        '''function computes the theoretically required wait to achieve a
+        defined error by gathering sequentially more soil. Criterium is p95
+        percentile of errors below max_error'''
+        ks_p95, weight = 2*max_error, 0  # initialize parameters
+        while ks_p95 > max_error:
+            weight += weight_steps
+            weights_temp, ks_s_temp = [], []
+            # make multiple tests to reduce randomnes
+            for _ in range(tests_per_step):
+                sample_ids, sample_weights, sample_diameter = self.get_sample(
+                    weight, total_weight, grain_weights, grain_diameters,
+                    strategy='random choice')
+                fractions = self.sieve(sample_ids, sample_diameter,
+                                       sample_weights, SIEVE_SIZES)
+                weights_temp.append(sample_weights.sum())
+                ks_s_temp.append(self.ks_statistic(
+                    list(fractions_true.values()), list(fractions.values())))
+            weight_avg = np.mean(weights_temp)
+            ks_p95 = np.percentile(ks_s_temp, 95)
+            if verbose is True:
+                print(f'{round(weight_avg, 1)} kg\t\tp95 {round(ks_p95, 1)}')
+
+        return weight  # required weight [kg]
+
 
 class utilities:
 
@@ -191,14 +299,6 @@ class utilities:
             if val < x:
                 return False
         return True
-
-
-class statistics:
-
-    def ks_statistic(self, sieve_curve1, sieve_curve2):
-        '''calculate Kolmogorov-Smirnov (KS) statistic for 2 sieve curves'''
-        # Calculate the maximum vertical distance between the sieve curves
-        return np.max(np.abs(np.array(sieve_curve1) - np.array(sieve_curve2)))
 
 
 class plotter(laboratory):
@@ -212,8 +312,9 @@ class plotter(laboratory):
         ms_ASTM = [self.ASTM_required_sample_weight(ds)/1000 for ds in sizes]
 
         fig, ax = plt.subplots(figsize=(5, 5))
-        ax.plot(sizes, ms_ISO, label='ISO 17892-4')
-        ax.plot(sizes, ms_ASTM, label='ASTM D6913/D6913M − 17')
+        ax.plot(sizes, ms_ISO, color='black', label='ISO 17892-4')
+        ax.plot(sizes, ms_ASTM, color='black', ls='--',
+                label='ASTM D6913/D6913M − 17')
         ax.grid(alpha=0.5)
         ax.set_xlabel('max. grain diameter of soil [mm]')
         ax.set_ylabel('required sample weight [kg]')
@@ -244,7 +345,7 @@ class plotter(laboratory):
             plt.close()
 
     def sieve_curves_plot(self, SIEVE_SIZES: list, fractions_true: list,
-                          savepath: str,
+                          savepath: str = None,
                           sieved_samples: list = None,
                           req_sample_weights: list = None,
                           ks_distances: list = None,
@@ -253,7 +354,7 @@ class plotter(laboratory):
         samples'''
         fig, ax = plt.subplots(figsize=(10, 5))
         if len(np.array(fractions_true).shape) == 1:
-            ax.plot(SIEVE_SIZES, fractions_true, label="sieve curve real",
+            ax.plot(SIEVE_SIZES, fractions_true, label="underlying soil",
                     color='black', lw=3)
         else:
             for f in fractions_true:
@@ -261,23 +362,30 @@ class plotter(laboratory):
 
         if sieved_samples is not None:
             for i in range(len(sieved_samples)):
-                ax.plot(SIEVE_SIZES, sieved_samples[i],
-                        label=f"sample {round(req_sample_weights[i], 1)}kg,\
-                        ks distance: {round(ks_distances[i], 3)}",
-                        alpha=0.8)
+                ax.plot(
+                    SIEVE_SIZES, sieved_samples[i],
+                    label=f"sample {round(req_sample_weights[i], 1)}kg  ks: {round(ks_distances[i], 1)} %",
+                    alpha=0.8)
 
         ax.set_xscale('log')
         ax.set_xlim(left=0.002, right=630)
         ax.set_ylim(bottom=0, top=101)
-        ax.set_xticks([0.006, 0.02, 0.06, 2, 63])
+        ax.set_xticks([0.06, 2, 63])
+        ax.vlines([0.06, 2, 63], ymin=0, ymax=101, color='black')
         ax.set_xlabel('grain size [mm]')
         ax.set_ylabel('[%]')
         ax.grid(alpha=0.5)
         ax.xaxis.set_major_formatter(ticker.FormatStrFormatter('%.3f'))
         ax.legend(loc='upper left')
 
+        plt.text(0.055, 102, '<- fines', fontsize=10, ha='right')
+        plt.text(0.5, 102, 'sand', fontsize=10, ha='left')
+        plt.text(8, 102, 'gravel', fontsize=10, ha='left')
+        plt.text(70, 102, 'cobbel', fontsize=10, ha='left')
+
         plt.tight_layout()
-        plt.savefig(savepath, dpi=600)
+        if savepath is not None:
+            plt.savefig(savepath, dpi=600)
         if close is True:
             plt.close()
 
@@ -287,6 +395,10 @@ class plotter(laboratory):
         '''scatterplot that shows results of the monte carlo simulations in the
         form of different soil distribution parameters Cu, Cc etc. vs. a metric
         of how well the sample fits the underlying distribution'''
+
+        ks_median = df[f'kolmogorov smirnov distance {weight_mode}'].median()
+        ks_p95 = np.percentile(df[f'kolmogorov smirnov distance {weight_mode}'], 95)
+
         fig, (ax1, ax2, ax3, ax4) = plt.subplots(nrows=1, ncols=4,
                                                  figsize=(20, 6))
         match color_mode:  # noqa
@@ -308,6 +420,11 @@ class plotter(laboratory):
                         sc[1]['max diameter [mm]'],
                         sc[1][f'kolmogorov smirnov distance {weight_mode}'],
                         alpha=0.5, label=sc[0])
+
+                ax3.axhline(y=ks_median, color='black', ls='-',
+                            label=f'med. error {round(ks_median, 1)}, p95 {round(ks_p95, 1)}')
+                ax3.axhline(y=ks_p95, color='black', ls='--')
+
                 ax1.legend()
                 ax2.legend()
                 ax3.legend()
@@ -489,21 +606,29 @@ class plotter(laboratory):
 
 if __name__ == '__main__':
     DENSITY = 2.65
-    TOT_MASS = 50
+    TOT_MASS = 60
     SIEVE_SIZES = [0.075, 0.105, 0.15, 0.25, 0.425, 0.85, 2, 4.75, 9.5, 19, 25, 37.5, 50, 75, 100, 150, 200, 300]  # sieve sizes [mm]
+
+    SIEVE_SIZES = np.exp(np.linspace(np.log(1), np.log(200), 30))
 
     lab, pltr = laboratory(), plotter()
 
     # make plot of random sieve curves to demonstrate sampler
-    fractions_trues = []
+    fractions_trues, max_diameters = [], []
 
-    for _ in range(200):
-        grain_diameters, grain_weights, grain_ids = lab.make_grains_new(
+    for i in range(400):
+        grain_diameters, grain_weights, grain_ids = lab.make_grains(
             DENSITY, TOT_MASS=TOT_MASS)
-        print(TOT_MASS, grain_weights.sum())
+        Dmax = grain_diameters.max()
+        print(i, grain_weights.sum())
         fractions_true = lab.sieve(grain_ids, grain_diameters, grain_weights,
                                    SIEVE_SIZES)
-        fractions_trues.append(fractions_true)
+        fractions_trues.append(list(fractions_true.values()))
+        max_diameters.append(Dmax)
 
-    pltr.sieve_curves_plot(SIEVE_SIZES, fractions_trues,
-                           savepath=fr'../figures/sieve_samples.jpg')
+    pltr.sieve_curves_plot(list(fractions_true.keys()), fractions_trues,
+                           savepath=fr'../figures/sieve_samples_new.jpg',
+                           close=False)
+
+    fig, ax = plt.subplots()
+    ax.hist(max_diameters, color='grey', edgecolor='black', bins=30)
