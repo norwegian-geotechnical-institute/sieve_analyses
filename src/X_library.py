@@ -10,6 +10,7 @@ Libraries:
 Author: Georg H. Erharter (georg.erharter@ngi.no)
 """
 
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -100,60 +101,6 @@ class laboratory(statistics):
                 sample_diameters = grain_diameters[sample_ids]
         return sample_ids, sample_weights, sample_diameters
 
-    def make_grains_old(self, DENSITY: float, TOT_MASS: float,
-                        verbose: bool = False) -> list:
-        '''function generates a new soil sample'''
-
-        def make_beta(lower, upper, n):
-            x = np.random.beta(a=np.random.uniform(1, 5),
-                               b=np.random.uniform(1, 5), size=n)
-            x = x*(upper-lower)
-            return x + lower
-
-        COMPONENTS = np.array(['Sa', 'fGr', 'mGr', 'cGr', 'Co'])
-
-        fractions = np.random.uniform(0, 1, np.random.randint(
-            2, len(COMPONENTS)+1))
-        fractions = fractions / sum(fractions)
-        fractions = np.sort(fractions)
-
-        components = np.random.choice(COMPONENTS, len(fractions),
-                                      replace=False)
-        if verbose is True:
-            print(components)
-            print(fractions)
-
-        diameters = []
-        tot_weight = 0
-
-        for i, component in enumerate(components):
-            while tot_weight < sum(fractions[:i+1]) * TOT_MASS:
-                match component:  # noqa
-                    case 'Sa':
-                        diameter = make_beta(0.063, 2, 1000)
-                    case 'fGr':
-                        diameter = make_beta(2, 6.3, 100)
-                    case 'mGr':
-                        diameter = make_beta(6.3, 20, 50)
-                    case 'cGr':
-                        diameter = make_beta(20, 63, 10)
-                    case 'Co':
-                        diameter = make_beta(63, 200, 1)
-                volume = ((4/3)*np.pi*((diameter/2)**3)) / 1000  # [cm3]
-                try:
-                    tot_weight += volume.sum() * DENSITY / 1000
-                except AttributeError:
-                    tot_weight += volume * DENSITY / 1000
-                diameters.append(diameter)
-
-        diameters = np.hstack(diameters)
-        np.random.shuffle(diameters)
-        volumes = (4/3)*np.pi*(diameters/2)**3  # [mm3]
-        volumes = volumes / 1000  # [cm3]
-        weights = volumes * DENSITY / 1000  # [kg]
-        ids = np.arange(len(diameters))
-        return diameters, weights, ids
-
     def make_grains(self, DENSITY: float, TOT_MASS: float,
                     min_d: float = 1, max_d: float = 200,
                     verbose: bool = False) -> list:
@@ -220,9 +167,9 @@ class laboratory(statistics):
     def calc_grading_characteristics(self, fractions_true: list,
                                      SIEVE_SIZES: list) -> list:
         '''function computes different metrics about the grading of a soil'''
-        d_keys = ['d10', 'd12', 'd25', 'd30', 'd50', 'd60', 'd75', 'd90']
-        d_vals = np.interp([10, 12, 25, 30, 50, 60, 75, 90], fractions_true,
-                           SIEVE_SIZES)
+        d_s = [10, 12, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90]
+        d_keys = [f'd{d}' for d in d_s]
+        d_vals = np.interp(d_s, fractions_true, SIEVE_SIZES)
         ds = dict(zip(d_keys, d_vals))
 
         Cu = ds['d60']/ds['d10']
@@ -345,20 +292,28 @@ class plotter(laboratory):
             plt.close()
 
     def sieve_curves_plot(self, SIEVE_SIZES: list, fractions_true: list,
+                          color: pd.Series = None,
                           savepath: str = None,
                           sieved_samples: list = None,
                           req_sample_weights: list = None,
                           ks_distances: list = None,
+                          x_min: float = 0.002,
                           close: bool = True) -> None:
         '''plot sieve curves of underlying soil distribution and taken
         samples'''
+        cmap = matplotlib.colormaps['inferno']
+
         fig, ax = plt.subplots(figsize=(10, 5))
         if len(np.array(fractions_true).shape) == 1:
             ax.plot(SIEVE_SIZES, fractions_true, label="underlying soil",
                     color='black', lw=3)
         else:
-            for f in fractions_true:
-                ax.plot(SIEVE_SIZES, f, color='black', alpha=0.2)
+            for i, f in enumerate(fractions_true):
+                if color is None:
+                    ax.plot(SIEVE_SIZES, f, color='black', alpha=0.2)
+                else:
+                    c = cmap(int(color[i] / color[:len(fractions_true)].max() * 255))
+                    ax.plot(SIEVE_SIZES, f, color=c)
 
         if sieved_samples is not None:
             for i in range(len(sieved_samples)):
@@ -368,10 +323,10 @@ class plotter(laboratory):
                     alpha=0.8)
 
         ax.set_xscale('log')
-        ax.set_xlim(left=0.002, right=630)
+        ax.set_xlim(left=x_min, right=630)
         ax.set_ylim(bottom=0, top=101)
-        ax.set_xticks([0.06, 2, 63])
-        ax.vlines([0.06, 2, 63], ymin=0, ymax=101, color='black')
+        ax.set_xticks([0.06, 2, 63, 200])
+        ax.vlines([0.06, 2, 63, 200], ymin=0, ymax=101, color='black')
         ax.set_xlabel('grain size [mm]')
         ax.set_ylabel('[%]')
         ax.grid(alpha=0.5)
@@ -379,9 +334,10 @@ class plotter(laboratory):
         ax.legend(loc='upper left')
 
         plt.text(0.055, 102, '<- fines', fontsize=10, ha='right')
-        plt.text(0.5, 102, 'sand', fontsize=10, ha='left')
+        plt.text(0.4, 102, 'sand', fontsize=10, ha='left')
         plt.text(8, 102, 'gravel', fontsize=10, ha='left')
-        plt.text(70, 102, 'cobbel', fontsize=10, ha='left')
+        plt.text(100, 102, 'cobbel', fontsize=10, ha='left')
+        plt.text(300, 102, 'blocks', fontsize=10, ha='left')
 
         plt.tight_layout()
         if savepath is not None:
@@ -607,8 +563,6 @@ class plotter(laboratory):
 if __name__ == '__main__':
     DENSITY = 2.65
     TOT_MASS = 60
-    SIEVE_SIZES = [0.075, 0.105, 0.15, 0.25, 0.425, 0.85, 2, 4.75, 9.5, 19, 25, 37.5, 50, 75, 100, 150, 200, 300]  # sieve sizes [mm]
-
     SIEVE_SIZES = np.exp(np.linspace(np.log(1), np.log(200), 30))
 
     lab, pltr = laboratory(), plotter()

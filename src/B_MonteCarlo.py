@@ -21,8 +21,8 @@ from X_library import laboratory, statistics, plotter, utilities
 # number of grains of underlying soil distribution -> impacts computation
 DENSITY = 2.65  # grain density [g/cm3]
 MIN_D, MAX_D = 1, 200  # [mm] min & max particle sizes of simulation
-N_SIMULATIONS = 30  # number of new simulations to do
-STUDY_NAME = '2024_03_17'  # study to work with or to create
+N_SIMULATIONS = 23  # number of new simulations to do
+STUDY_NAME = '2024_03_19'  # study to work with or to create
 PLOT = False  # flag to indicate if plots shall be created
 TOT_MASS = 1800  # [kg]
 

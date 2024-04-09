@@ -21,7 +21,7 @@ DENSITY = 2.65  # grain density [g/cm3]
 MIN_D, MAX_D = 1, 200  # [mm] min & max particle sizes of simulation
 # fractions of the ISO required sample mass that are analyzed
 FRACTIONS = [1, 0.75, 0.5, 0.25, 0.1, 0.05, 0.01]
-SEED = 1  # random seed for reproducibility
+SEED = 6  # random seed for reproducibility
 
 ###############################
 # main code execution
@@ -37,7 +37,7 @@ sieve_sizes = np.exp(np.linspace(np.log(MIN_D), np.log(MAX_D), 30))
 
 # initialize ground truth sample
 grain_diameters, grain_weights, grain_ids = lab.make_grains(
-    DENSITY, TOT_MASS=410)
+    DENSITY, TOT_MASS=410, min_d=MIN_D, max_d=MAX_D)
 
 total_weight = grain_weights.sum()
 

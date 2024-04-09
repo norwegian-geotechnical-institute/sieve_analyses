@@ -29,7 +29,7 @@ def fit_exponential(x, y):
     return a_fit, b_fit
 
 
-STUDY_NAME = '2024_03_17'  # study to work with or to create
+STUDY_NAME = '2024_03_19'  # study to work with or to create
 
 df = pd.read_excel(fr'../simulations/{STUDY_NAME}.xlsx')
 print(len(df))
@@ -209,17 +209,20 @@ df['ASTM req. weight [kg]'] / df['new. req. weight ASTM [kg]']
 fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(10, 5))
 
 ax1.scatter(df['ISO req. weight [kg]'], df['new. req. weight ISO [kg]'],
-            color='grey', edgecolor='black', alpha=0.5)
+            color='grey', edgecolor='black', alpha=0.4)
 ax1.plot([0, 400], [0, 400], color='black', lw=4, ls='--')
+ax1.text(.05, .94, 'a', fontsize=20, transform=ax1.transAxes)
 ax1.grid(alpha=0.5)
 ax1.set_xlabel('ISO req. weight [kg]')
 ax1.set_ylabel('req. weight acc. new criterium [kg]')
 
 ax2.scatter(df['ASTM req. weight [kg]'], df['new. req. weight ASTM [kg]'],
-            color='grey', edgecolor='black', alpha=0.5)
+            color='grey', edgecolor='black', alpha=0.4)
 ax2.plot([0, 1200], [0, 1200], color='black', lw=4, ls='--')
+ax2.text(.05, .94, 'b', fontsize=20, transform=ax2.transAxes)
 ax2.grid(alpha=0.5)
 ax2.set_xlabel('ASTM req. weight [kg]')
+ax2.set_ylabel('req. weight acc. new criterium [kg]')
 
 plt.tight_layout()
 plt.savefig(r'../figures/comparison.jpg')
@@ -230,8 +233,19 @@ sieve_cols = [c for c in df.columns if 'mm sieve [m%]' in c]
 
 sieve_sizes = [eval(s.split(' ')[0]) for s in sieve_cols]
 
-fractions_trues = [list(df[sieve_cols].iloc[i].values) for i in range(500)]
+fractions_trues = [list(df[sieve_cols].iloc[i].values) for i in range(100)]
 
-pltr.sieve_curves_plot(sieve_sizes, fractions_trues,
+# new parameter for grading characterization
+df['grading'] = np.mean(np.vstack(((np.log(df['d30']) - np.log(df['d10'])),
+                                  (np.log(df['d50']) - np.log(df['d30'])),
+                                  (np.log(df['d70']) - np.log(df['d50'])),
+                                  (np.log(df['d90']) - np.log(df['d70'])))).T,
+                       axis=1)
+fig, ax = plt.subplots()
+ax.scatter(df['Cc'], df['grading'])
+df['grading'] = np.where(df['grading'] > 2, 1, 0)
+
+pltr.sieve_curves_plot(sieve_sizes, fractions_trues, color=df['S0'],
                        savepath=r'../figures/sieve_samples_new.jpg',
+                       x_min=0.06,
                        close=True)
