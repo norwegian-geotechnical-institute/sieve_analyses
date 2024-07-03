@@ -21,7 +21,7 @@ DENSITY = 2.65  # grain density [g/cm3]
 MIN_D, MAX_D = 1, 200  # [mm] min & max particle sizes of simulation
 # fractions of the ISO required sample mass that are analyzed
 FRACTIONS = [1, 0.75, 0.5, 0.25, 0.1, 0.05, 0.01]
-SEED = 6  # random seed for reproducibility
+SEED = 5  # random seed for reproducibility
 
 ###############################
 # main code execution
@@ -84,10 +84,12 @@ for sample_fraction in FRACTIONS:
 pltr.distances_plot(req_sample_weights, ks_distances,
                     savepath=fr'../figures/{SEED}_distances.jpg')
 
-pltr.sieve_curves_plot(
-    sieve_sizes, list(fractions_true.values()),
-    fr'../figures/{SEED}_sieve_line.jpg',
-    sieved_samples, req_sample_weights, ks_distances)
+pltr.sieve_curves_plot(SIEVE_SIZES=sieve_sizes,
+                       fractions_true=list(fractions_true.values()),
+                       savepath=fr'../figures/{SEED}_sieve_line.jpg',
+                       sieved_samples=sieved_samples,
+                       req_sample_weights=req_sample_weights,
+                       ks_distances=ks_distances)
 
 # # make sample preview plot ... very experimental still
 # weight = 1.5

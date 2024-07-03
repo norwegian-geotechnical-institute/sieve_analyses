@@ -245,7 +245,31 @@ fig, ax = plt.subplots()
 ax.scatter(df['Cc'], df['grading'])
 df['grading'] = np.where(df['grading'] > 2, 1, 0)
 
-pltr.sieve_curves_plot(sieve_sizes, fractions_trues, color=df['S0'],
+pltr.sieve_curves_plot(SIEVE_SIZES=sieve_sizes, fractions_true=fractions_trues,
+                       color=df['S0'],
                        savepath=r'../figures/sieve_samples_new.jpg',
-                       x_min=0.06,
                        close=True)
+
+###############################
+# plot showing real lab results
+###############################
+
+fig, ax = pltr.make_sieve_plot()
+
+fp = r'C:\Users\GEr\OneDrive - NGI\Research\Internal_Funding\GBV_GrainSizes\lab\LabResults.xlsx'
+df = pd.read_excel(fp, header=1, nrows=13)
+
+ax.plot(df['Sieve size Ø [mm]'], df['TU Graz 23094 (ISO)'],
+        lw=3, color='C1', label='TU Graz gravel (ISO), 91.8 kg')
+ax.plot(df['Sieve size Ø [mm]'], df['TU Graz 23094-1'],
+        lw=1.5, color='C1', alpha=0.5, label='TU Graz gravel, 19.7 kg')
+
+ax.plot(df['Sieve size Ø [mm]'], df['NGI med.-fine Sand (ISO)'],
+        lw=3, color='C0', label='NGI med.-fine sand (ISO), 200 g')
+ax.plot(df['Sieve size Ø [mm]'], df['NGI med.-fine Sand 5g'],
+        lw=1.5, color='C0', alpha=0.5, label='NGI med.-fine sand, 5 g')
+ax.legend(loc='upper left')
+
+plt.tight_layout()
+plt.savefig(r'../figures/real_tests.pdf')
+plt.close()

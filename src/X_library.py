@@ -259,15 +259,22 @@ class plotter(laboratory):
         ms_ASTM = [self.ASTM_required_sample_weight(ds)/1000 for ds in sizes]
 
         fig, ax = plt.subplots(figsize=(5, 5))
-        ax.plot(sizes, ms_ISO, color='black', label='ISO 17892-4')
+        ax.plot(sizes, ms_ISO, color='black', label='ISO 17892-4', zorder=10)
         ax.plot(sizes, ms_ASTM, color='black', ls='--',
-                label='ASTM D6913/D6913M − 17')
-        ax.grid(alpha=0.5)
+                label='ASTM D6913/D6913M − 17', zorder=10)
+        vlines = (20, 63, 200)
+        ax.vlines(vlines, ymin=0, ymax=max(ms_ASTM), color='grey',
+                  zorder=5)
+        for vline in vlines:
+            ax.text(x=vline+2, y=max(ms_ASTM), s=f'{vline}\nmm', ha='left',
+                    va='top')
+        ax.grid(alpha=0.5, axis='y')
         ax.set_xlabel('max. grain diameter of soil [mm]')
         ax.set_ylabel('required sample weight [kg]')
+        ax.set_xlim(left=2)
         ax.set_yscale('log')
         ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: '{:g}'.format(y)))
-        ax.legend()
+        ax.legend(loc='lower right', framealpha=1)
 
         plt.tight_layout()
         plt.savefig(savepath, dpi=600)
@@ -291,19 +298,108 @@ class plotter(laboratory):
         if close is True:
             plt.close()
 
+    def make_sieve_plot(self):
+        '''function creates the background of a sieve plot ... does not plot
+        data!'''
+        # create sieve curves background
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.set_xscale('log')
+        ax.set_xlim(left=0.002, right=630)
+        ax.set_ylim(bottom=0, top=101)
+        ax.set_xticks([0.06, 2, 63, 200])
+        ax.vlines([0.002, 0.06, 2, 63, 200], ymin=0, ymax=101,
+                  color='lightgrey')
+        ax.vlines([0.006, 0.02, 0.2, 0.6, 6.3, 20], ymin=0, ymax=101,
+                  color='lightgrey', ls='--')
+        ax.set_xlabel('grain size [mm]')
+        ax.set_ylabel('percentage passing [%]')
+        ax.grid(alpha=0.5)
+        ax.xaxis.set_major_formatter(ticker.FormatStrFormatter('%.3f'))
+
+        # grain size labels
+        ax.text(0.009, 116, 'SILT', fontsize=12, va='top')
+        ax.text(0.003, 110, 'fine', fontsize=10, va='top')
+        ax.text(0.007, 110, 'medium', fontsize=10, va='top')
+        ax.text(0.025, 110, 'coarse', fontsize=10, va='top')
+        ax.text(0.25, 116, 'SAND', fontsize=12, va='top')
+        ax.text(0.1, 110, 'fine', fontsize=10, va='top')
+        ax.text(0.22, 110, 'medium', fontsize=10, va='top')
+        ax.text(0.7, 110, 'coarse', fontsize=10, va='top')
+        ax.text(7, 116, 'GRAVEL', fontsize=12, va='top')
+        ax.text(3, 110, 'fine', fontsize=10, va='top')
+        ax.text(7.1, 110, 'medium', fontsize=10, va='top')
+        ax.text(25, 110, 'coarse', fontsize=10, va='top')
+        ax.text(70, 113, 'COBBEL', fontsize=12, va='top')
+        ax.text(220, 113, 'BLOCKS', fontsize=12, va='top')
+        # ISO lablling
+        tsi, yiso = 8, 101.5
+        ax.text(0.005, yiso, 'ISO Standard sieves:', fontsize=tsi, va='bottom')
+        ax.text(0.063, yiso, '.063', fontsize=tsi, va='bottom', ha='center')
+        ax.text(0.125, yiso, '.125', fontsize=tsi, va='bottom', ha='center')
+        ax.text(0.25, yiso, '.25', fontsize=tsi, va='bottom', ha='center')
+        ax.text(0.5, yiso, '.5', fontsize=tsi, va='bottom', ha='center')
+        ax.text(1, yiso, '1', fontsize=tsi, va='bottom', ha='center')
+        ax.text(2, yiso, '2', fontsize=tsi, va='bottom', ha='center')
+        ax.text(4, yiso, '4', fontsize=tsi, va='bottom', ha='center')
+        ax.text(8, yiso, '8', fontsize=tsi, va='bottom', ha='center')
+        ax.text(16, yiso, '16', fontsize=tsi, va='bottom', ha='center')
+        ax.text(31.5, yiso, '31.5', fontsize=tsi, va='bottom', ha='center')
+        ax.text(45, yiso, '45', fontsize=tsi, va='bottom', ha='center')
+        ax.text(63, yiso, '63', fontsize=tsi, va='bottom', ha='center')
+        ax.text(90, yiso, '90', fontsize=tsi, va='bottom', ha='center')
+
+        # plot grid around labels
+        trans = ax.get_xaxis_transform()
+        # horizontal lines
+        ax.plot([0.002, 630], [1.05, 1.05], color="k", transform=trans,
+                clip_on=False)
+        ax.plot([0.002, 63], [1.10, 1.10], color="k", transform=trans,
+                clip_on=False)
+        ax.plot([0.002, 630], [1.17, 1.17], color="k", transform=trans,
+                clip_on=False)
+        # bold vertical lines
+        ax.plot([0.002, 0.002], [1.05, 1.17], color="k", transform=trans,
+                clip_on=False)
+        ax.plot([0.063, 0.063], [1.05, 1.17], color="k", transform=trans,
+                clip_on=False)
+        ax.plot([2, 2], [1.05, 1.17], color="k", transform=trans,
+                clip_on=False)
+        ax.plot([63, 63], [1.05, 1.17], color="k", transform=trans,
+                clip_on=False)
+        ax.plot([200, 200], [1.05, 1.17], color="k", transform=trans,
+                clip_on=False)
+        ax.plot([630, 630], [1.05, 1.17], color="k", transform=trans,
+                clip_on=False)
+        # thin vertical lines
+        ax.plot([0.0063, 0.0063], [1.05, 1.10], color="grey", linewidth=0.5,
+                transform=trans, clip_on=False)
+        ax.plot([0.63, 0.63], [1.05, 1.10], color="grey", linewidth=0.5,
+                transform=trans, clip_on=False)
+        ax.plot([6.3, 6.3], [1.05, 1.10], color="grey", linewidth=0.5,
+                transform=trans, clip_on=False)
+        ax.plot([0.02, 0.02], [1.05, 1.10], color="grey", linewidth=0.5,
+                transform=trans, clip_on=False)
+        ax.plot([0.2, 0.2], [1.05, 1.10], color="grey", linewidth=0.5,
+                transform=trans, clip_on=False)
+        ax.plot([20, 20], [1.05, 1.10], color="grey", linewidth=0.5,
+                transform=trans, clip_on=False)
+
+        return fig, ax
+
     def sieve_curves_plot(self, SIEVE_SIZES: list, fractions_true: list,
                           color: pd.Series = None,
                           savepath: str = None,
                           sieved_samples: list = None,
                           req_sample_weights: list = None,
                           ks_distances: list = None,
-                          x_min: float = 0.002,
                           close: bool = True) -> None:
         '''plot sieve curves of underlying soil distribution and taken
         samples'''
         cmap = matplotlib.colormaps['inferno']
 
-        fig, ax = plt.subplots(figsize=(10, 5))
+        fig, ax = self.make_sieve_plot()
+
+        # plot data
         if len(np.array(fractions_true).shape) == 1:
             ax.plot(SIEVE_SIZES, fractions_true, label="underlying soil",
                     color='black', lw=3)
@@ -318,26 +414,11 @@ class plotter(laboratory):
         if sieved_samples is not None:
             for i in range(len(sieved_samples)):
                 ax.plot(
-                    SIEVE_SIZES, sieved_samples[i],
+                    SIEVE_SIZES, np.array(sieved_samples[i]),
                     label=f"sample {round(req_sample_weights[i], 1)}kg  ks: {round(ks_distances[i], 1)} %",
                     alpha=0.8)
 
-        ax.set_xscale('log')
-        ax.set_xlim(left=x_min, right=630)
-        ax.set_ylim(bottom=0, top=101)
-        ax.set_xticks([0.06, 2, 63, 200])
-        ax.vlines([0.06, 2, 63, 200], ymin=0, ymax=101, color='black')
-        ax.set_xlabel('grain size [mm]')
-        ax.set_ylabel('[%]')
-        ax.grid(alpha=0.5)
-        ax.xaxis.set_major_formatter(ticker.FormatStrFormatter('%.3f'))
         ax.legend(loc='upper left')
-
-        plt.text(0.055, 102, '<- fines', fontsize=10, ha='right')
-        plt.text(0.4, 102, 'sand', fontsize=10, ha='left')
-        plt.text(8, 102, 'gravel', fontsize=10, ha='left')
-        plt.text(100, 102, 'cobbel', fontsize=10, ha='left')
-        plt.text(300, 102, 'blocks', fontsize=10, ha='left')
 
         plt.tight_layout()
         if savepath is not None:
@@ -430,6 +511,11 @@ class plotter(laboratory):
         if close is True:
             plt.close()
 
+
+class sample_preview:
+    '''class with functions to make a preview of a soil sample - very
+    experimental, use not recommended'''
+
     def identify_overlapping(self, grain_xs, grain_ys, grain_rs):
         # check for overlapping grains
         dx = grain_xs - grain_xs[:, np.newaxis]
@@ -443,8 +529,10 @@ class plotter(laboratory):
         return np.where(np.any(overlapping, axis=1) == True)[0]
 
     def shake(self, grain_xs, grain_ys, grain_rs, BOX_SIZE):
-        delta_x = np.random.normal(loc=0, scale=grain_rs/10, size=len(grain_xs))
-        delta_y = np.random.normal(loc=0, scale=grain_rs/10, size=len(grain_ys))
+        delta_x = np.random.normal(loc=0, scale=grain_rs/10,
+                                   size=len(grain_xs))
+        delta_y = np.random.normal(loc=0, scale=grain_rs/10,
+                                   size=len(grain_ys))
         grain_xs += delta_x
         grain_ys += delta_y
         grain_xs = np.where(grain_xs < 0, grain_xs*-1, grain_xs)
