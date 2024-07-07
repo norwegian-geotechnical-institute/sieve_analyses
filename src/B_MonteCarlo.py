@@ -21,9 +21,8 @@ from X_library import laboratory, statistics, plotter, utilities
 # number of grains of underlying soil distribution -> impacts computation
 DENSITY = 2.65  # grain density [g/cm3]
 MIN_D, MAX_D = 1, 200  # [mm] min & max particle sizes of simulation
-N_SIMULATIONS = 2  # number of new simulations to do
+N_SIMULATIONS = 300  # number of new simulations to do
 STUDY_NAME = '2024_07_07'  # study to work with or to create
-PLOT = False  # flag to indicate if plots shall be created
 TOT_MASS = 1800  # [kg]
 
 ###############################
@@ -142,18 +141,3 @@ except FileNotFoundError:
     df = df_new
 df.to_excel(fr'../simulations/{STUDY_NAME}.xlsx', index=False)
 print(f'{len(df)} samples processed')
-
-##########################
-# plot results
-##########################
-
-if PLOT is True:
-    weight_modes = ['ISO', 'ASTM', 'new', 'const']
-
-    for weight_mode in weight_modes:
-        pltr.monte_carlo_scatterplot(
-            df, weight_mode=weight_mode, color_mode='weight',
-            savepath=fr'../simulations/{STUDY_NAME}_{weight_mode}_weight.jpg')
-        pltr.monte_carlo_scatterplot(
-            df, weight_mode=weight_mode, color_mode='USCS',
-            savepath=fr'../simulations/{STUDY_NAME}_{weight_mode}_USCS.jpg')

@@ -442,9 +442,10 @@ class plotter(laboratory):
         if close is True:
             plt.close()
 
-    def monte_carlo_scatterplot(self, df: pd.DataFrame, weight_mode: str,
+    def monte_carlo_scatterplot_legacy(self, df: pd.DataFrame, weight_mode: str,
                                 color_mode: str, savepath: str,
                                 close: bool = True) -> None:
+        # old plot that is not required anymore -> TODO remove
         '''scatterplot that shows results of the monte carlo simulations in the
         form of different soil distribution parameters Cu, Cc etc. vs. a metric
         of how well the sample fits the underlying distribution'''

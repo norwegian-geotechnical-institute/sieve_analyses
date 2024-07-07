@@ -29,7 +29,7 @@ def fit_exponential(x, y):
     return a_fit, b_fit
 
 
-STUDY_NAME = '2024_03_19'  # study to work with or to create
+STUDY_NAME = '2024_07_07'  # study to work with or to create
 
 df = pd.read_excel(fr'../simulations/{STUDY_NAME}.xlsx')
 print(len(df))
