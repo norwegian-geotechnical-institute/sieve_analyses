@@ -298,7 +298,7 @@ class plotter(laboratory):
         if close is True:
             plt.close()
 
-    def make_sieve_plot(self):
+    def make_sieve_plot(self, main_fontsize=12, iso_fontsize=10):
         '''function creates the background of a sieve plot ... does not plot
         data!'''
         # create sieve curves background
@@ -311,77 +311,92 @@ class plotter(laboratory):
                   color='lightgrey')
         ax.vlines([0.006, 0.02, 0.2, 0.6, 6.3, 20], ymin=0, ymax=101,
                   color='lightgrey', ls='--')
-        ax.set_xlabel('grain size [mm]')
-        ax.set_ylabel('percentage passing [%]')
+        ax.set_xlabel('grain size [mm]', fontsize=main_fontsize)
+        ax.set_ylabel('mass percentage passing [%]', fontsize=main_fontsize)
         ax.grid(alpha=0.5)
         ax.xaxis.set_major_formatter(ticker.FormatStrFormatter('%.3f'))
+        ax.tick_params(axis='both', labelsize=main_fontsize)
 
         # grain size labels
-        ax.text(0.009, 116, 'SILT', fontsize=12, va='top')
-        ax.text(0.003, 110, 'fine', fontsize=10, va='top')
-        ax.text(0.007, 110, 'medium', fontsize=10, va='top')
-        ax.text(0.025, 110, 'coarse', fontsize=10, va='top')
-        ax.text(0.25, 116, 'SAND', fontsize=12, va='top')
-        ax.text(0.1, 110, 'fine', fontsize=10, va='top')
-        ax.text(0.22, 110, 'medium', fontsize=10, va='top')
-        ax.text(0.7, 110, 'coarse', fontsize=10, va='top')
-        ax.text(7, 116, 'GRAVEL', fontsize=12, va='top')
-        ax.text(3, 110, 'fine', fontsize=10, va='top')
-        ax.text(7.1, 110, 'medium', fontsize=10, va='top')
-        ax.text(25, 110, 'coarse', fontsize=10, va='top')
-        ax.text(70, 113, 'COBBEL', fontsize=12, va='top')
-        ax.text(220, 113, 'BLOCKS', fontsize=12, va='top')
+        ax.text(0.009, 118, 'SILT', fontsize=main_fontsize, va='top')
+        ax.text(0.003, 112, 'fine', fontsize=main_fontsize, va='top')
+        ax.text(0.007, 112, 'medium', fontsize=main_fontsize, va='top')
+        ax.text(0.025, 112, 'coarse', fontsize=main_fontsize, va='top')
+        ax.text(0.25, 118, 'SAND', fontsize=main_fontsize, va='top')
+        ax.text(0.1, 112, 'fine', fontsize=main_fontsize, va='top')
+        ax.text(0.22, 112, 'medium', fontsize=main_fontsize, va='top')
+        ax.text(0.7, 112, 'coarse', fontsize=main_fontsize, va='top')
+        ax.text(7, 118, 'GRAVEL', fontsize=main_fontsize, va='top')
+        ax.text(3, 112, 'fine', fontsize=main_fontsize, va='top')
+        ax.text(7.1, 112, 'medium', fontsize=main_fontsize, va='top')
+        ax.text(25, 112, 'coarse', fontsize=main_fontsize, va='top')
+        ax.text(70, 115, 'COBBEL', fontsize=main_fontsize, va='top')
+        ax.text(220, 115, 'BLOCKS', fontsize=main_fontsize, va='top')
         # ISO lablling
-        tsi, yiso = 8, 101.5
-        ax.text(0.005, yiso, 'ISO Standard sieves:', fontsize=tsi, va='bottom')
-        ax.text(0.063, yiso, '.063', fontsize=tsi, va='bottom', ha='center')
-        ax.text(0.125, yiso, '.125', fontsize=tsi, va='bottom', ha='center')
-        ax.text(0.25, yiso, '.25', fontsize=tsi, va='bottom', ha='center')
-        ax.text(0.5, yiso, '.5', fontsize=tsi, va='bottom', ha='center')
-        ax.text(1, yiso, '1', fontsize=tsi, va='bottom', ha='center')
-        ax.text(2, yiso, '2', fontsize=tsi, va='bottom', ha='center')
-        ax.text(4, yiso, '4', fontsize=tsi, va='bottom', ha='center')
-        ax.text(8, yiso, '8', fontsize=tsi, va='bottom', ha='center')
-        ax.text(16, yiso, '16', fontsize=tsi, va='bottom', ha='center')
-        ax.text(31.5, yiso, '31.5', fontsize=tsi, va='bottom', ha='center')
-        ax.text(45, yiso, '45', fontsize=tsi, va='bottom', ha='center')
-        ax.text(63, yiso, '63', fontsize=tsi, va='bottom', ha='center')
-        ax.text(90, yiso, '90', fontsize=tsi, va='bottom', ha='center')
+        yiso = 101.5
+        ax.text(0.005, yiso, 'ISO Standard sieves:', fontsize=iso_fontsize,
+                va='bottom')
+        ax.text(0.063, yiso, '.063', fontsize=iso_fontsize,
+                va='bottom', ha='center')
+        ax.text(0.125, yiso, '.125', fontsize=iso_fontsize,
+                va='bottom', ha='center')
+        ax.text(0.25, yiso, '.25', fontsize=iso_fontsize,
+                va='bottom', ha='center')
+        ax.text(0.5, yiso, '.5', fontsize=iso_fontsize,
+                va='bottom', ha='center')
+        ax.text(1, yiso, '1', fontsize=iso_fontsize,
+                va='bottom', ha='center')
+        ax.text(2, yiso, '2', fontsize=iso_fontsize,
+                va='bottom', ha='center')
+        ax.text(4, yiso, '4', fontsize=iso_fontsize,
+                va='bottom', ha='center')
+        ax.text(8, yiso, '8', fontsize=iso_fontsize,
+                va='bottom', ha='center')
+        ax.text(16, yiso, '16', fontsize=iso_fontsize,
+                va='bottom', ha='center')
+        ax.text(31.5, yiso, '31.5', fontsize=iso_fontsize,
+                va='bottom', ha='center')
+        ax.text(45, yiso, '45', fontsize=iso_fontsize,
+                va='bottom', ha='center')
+        ax.text(63, yiso, '63', fontsize=iso_fontsize,
+                va='bottom', ha='center')
+        ax.text(90, yiso, '90', fontsize=iso_fontsize,
+                va='bottom', ha='center')
 
         # plot grid around labels
         trans = ax.get_xaxis_transform()
         # horizontal lines
-        ax.plot([0.002, 630], [1.05, 1.05], color="k", transform=trans,
+        ax.plot([0.002, 630], [1.06, 1.06], color="k", transform=trans,
                 clip_on=False)
-        ax.plot([0.002, 63], [1.10, 1.10], color="k", transform=trans,
+        ax.plot([0.002, 63], [1.12, 1.12], color="k", transform=trans,
                 clip_on=False)
-        ax.plot([0.002, 630], [1.17, 1.17], color="k", transform=trans,
+        ax.plot([0.002, 630], [1.18, 1.18], color="k", transform=trans,
                 clip_on=False)
         # bold vertical lines
-        ax.plot([0.002, 0.002], [1.05, 1.17], color="k", transform=trans,
+        ax.plot([0.002, 0.002], [1.06, 1.18], color="k", transform=trans,
                 clip_on=False)
-        ax.plot([0.063, 0.063], [1.05, 1.17], color="k", transform=trans,
+        ax.plot([0.063, 0.063], [1.06, 1.18], color="k", transform=trans,
                 clip_on=False)
-        ax.plot([2, 2], [1.05, 1.17], color="k", transform=trans,
+        ax.plot([2, 2], [1.06, 1.18], color="k", transform=trans,
                 clip_on=False)
-        ax.plot([63, 63], [1.05, 1.17], color="k", transform=trans,
+        ax.plot([63, 63], [1.06, 1.18], color="k", transform=trans,
                 clip_on=False)
-        ax.plot([200, 200], [1.05, 1.17], color="k", transform=trans,
+        ax.plot([200, 200], [1.06, 1.18], color="k", transform=trans,
                 clip_on=False)
-        ax.plot([630, 630], [1.05, 1.17], color="k", transform=trans,
+        ax.plot([630, 630], [1.06, 1.18], color="k", transform=trans,
                 clip_on=False)
         # thin vertical lines
-        ax.plot([0.0063, 0.0063], [1.05, 1.10], color="grey", linewidth=0.5,
+        ax.plot([0.0063, 0.0063], [1.06, 1.11], color="grey", linewidth=0.5,
                 transform=trans, clip_on=False)
-        ax.plot([0.63, 0.63], [1.05, 1.10], color="grey", linewidth=0.5,
+        ax.plot([0.63, 0.63], [1.06, 1.11], color="grey", linewidth=0.5,
                 transform=trans, clip_on=False)
-        ax.plot([6.3, 6.3], [1.05, 1.10], color="grey", linewidth=0.5,
+        ax.plot([6.3, 6.3], [1.06, 1.11], color="grey", linewidth=0.5,
                 transform=trans, clip_on=False)
-        ax.plot([0.02, 0.02], [1.05, 1.10], color="grey", linewidth=0.5,
+        ax.plot([0.02, 0.02], [1.06, 1.11], color="grey", linewidth=0.5,
                 transform=trans, clip_on=False)
-        ax.plot([0.2, 0.2], [1.05, 1.10], color="grey", linewidth=0.5,
+        ax.plot([0.2, 0.2], [1.06, 1.11], color="grey", linewidth=0.5,
                 transform=trans, clip_on=False)
-        ax.plot([20, 20], [1.05, 1.10], color="grey", linewidth=0.5,
+        ax.plot([20, 20], [1.06, 1.11], color="grey", linewidth=0.5,
                 transform=trans, clip_on=False)
 
         return fig, ax
@@ -418,7 +433,7 @@ class plotter(laboratory):
                     label=f"sample {round(req_sample_weights[i], 1)}kg  ks: {round(ks_distances[i], 1)} %",
                     alpha=0.8)
 
-        ax.legend(loc='upper left')
+        ax.legend(loc='upper left', fontsize=12)
 
         plt.tight_layout()
         if savepath is not None:
