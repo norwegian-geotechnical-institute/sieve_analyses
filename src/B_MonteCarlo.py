@@ -21,8 +21,8 @@ from X_library import laboratory, statistics, plotter, utilities
 # number of grains of underlying soil distribution -> impacts computation
 DENSITY = 2.65  # grain density [g/cm3]
 MIN_D, MAX_D = 1, 200  # [mm] min & max particle sizes of simulation
-N_SIMULATIONS = 23  # number of new simulations to do
-STUDY_NAME = '2024_03_19'  # study to work with or to create
+N_SIMULATIONS = 2  # number of new simulations to do
+STUDY_NAME = '2024_07_07'  # study to work with or to create
 PLOT = False  # flag to indicate if plots shall be created
 TOT_MASS = 1800  # [kg]
 
@@ -73,7 +73,7 @@ for i in tqdm(range(N_SIMULATIONS)):
 
     # determine the requ. sample weight to achieve p95 ks of <= 10
     req_weight_p95 = lab.check_required_weight(
-        max_error=10, weight_steps=15, tests_per_step=12,
+        max_error=10, weight_steps=10, tests_per_step=20,
         total_weight=total_weight, grain_weights=grain_weights,
         grain_diameters=grain_diameters, SIEVE_SIZES=sieve_sizes,
         fractions_true=fractions_true, verbose=False)

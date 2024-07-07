@@ -207,13 +207,14 @@ class laboratory(statistics):
 
         return soil_class
 
-    def check_required_weight(self, max_error: float, weight_steps: float,
+    def check_required_weight(self, max_error: float,  # [%]
+                              weight_steps: float,  # steps to increase weight
                               tests_per_step: int, total_weight: float,
                               grain_weights: np.array,
                               grain_diameters: np.array, SIEVE_SIZES: list,
                               fractions_true: dict,
                               verbose: bool = False):
-        '''function computes the theoretically required wait to achieve a
+        '''function computes the theoretically required mass to achieve a
         defined error by gathering sequentially more soil. Criterium is p95
         percentile of errors below max_error'''
         ks_p95, weight = 2*max_error, 0  # initialize parameters
