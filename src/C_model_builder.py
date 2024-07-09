@@ -251,25 +251,102 @@ pltr.sieve_curves_plot(SIEVE_SIZES=sieve_sizes, fractions_true=fractions_trues,
                        close=True)
 
 ###############################
-# plot showing real lab results
+# plot showing real lab results: sieve curves
 ###############################
+
+fp = r'../laboratory/LabResults.xlsx'
+df = pd.read_excel(fp, header=2, nrows=13, usecols=list(range(1, 9)))
+headers = list(df.columns)
 
 fig, ax = pltr.make_sieve_plot()
 
-fp = r'C:\Users\GEr\OneDrive - NGI\Research\Internal_Funding\GBV_GrainSizes\lab\LabResults.xlsx'
-df = pd.read_excel(fp, header=1, nrows=13)
+ax.plot(df['Sieve size Ø [mm]'], df['Soil C (ISO)'],
+        lw=3, color='C1', label='Soil C (ISO), 50 kg')
+ax.plot(df['Sieve size Ø [mm]'], df['Soil C'],
+        lw=1.5, color='C1', alpha=0.5, label='Soil C, 20 kg')
 
-ax.plot(df['Sieve size Ø [mm]'], df['TU Graz 23094 (ISO)'],
-        lw=3, color='C1', label='TU Graz gravel (ISO), 91.8 kg')
-ax.plot(df['Sieve size Ø [mm]'], df['TU Graz 23094-1'],
-        lw=1.5, color='C1', alpha=0.5, label='TU Graz gravel, 19.7 kg')
-
-ax.plot(df['Sieve size Ø [mm]'], df['NGI med.-fine Sand (ISO)'],
-        lw=3, color='C0', label='NGI med.-fine sand (ISO), 200 g')
-ax.plot(df['Sieve size Ø [mm]'], df['NGI med.-fine Sand 5g'],
-        lw=1.5, color='C0', alpha=0.5, label='NGI med.-fine sand, 5 g')
+ax.plot(df['Sieve size Ø [mm]'], df['Soil A (ISO)'],
+        lw=3, color='C0', label='Soil A (ISO), 200 g')
+ax.plot(df['Sieve size Ø [mm]'], df['Soil A (5g)'],
+        lw=1.5, color='C0', alpha=0.5, label='Soil A, 5 g')
 ax.legend(loc='upper left')
 
 plt.tight_layout()
-plt.savefig(r'../figures/real_tests.pdf')
+plt.savefig(r'../laboratory/lab_tests_PSDs.jpg', dpi=600)
+plt.close()
+
+###############################
+# plot showing real lab results: scatter plot
+###############################
+
+fp = r'../laboratory/LabResults.xlsx'
+df = pd.read_excel(fp, skiprows=20, nrows=2, usecols=list(range(1, 9)))
+headers[0] = 'parameter'
+df.columns = headers
+df.set_index('parameter', inplace=True)
+
+fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(8, 4))
+
+ms = 100
+min_, max_ = df.loc['Cc'].min(), df.loc['Cc'].max()
+min_, max_ = min_-min_*0.1, max_+max_*0.1
+
+ax1.scatter(df['Soil A (ISO)'].loc['Cc'], df['Soil A (100g)'].loc['Cc'],
+            label='Soil A (100g)', s=ms, marker='o', color='C0')
+ax1.scatter(df['Soil A (ISO)'].loc['Cc'], df['Soil A (75g)'].loc['Cc'],
+            label='Soil A (75g)', s=ms, marker='o', color='C1')
+ax1.scatter(df['Soil A (ISO)'].loc['Cc'], df['Soil A (50g)'].loc['Cc'],
+            label='Soil A (50g)', s=ms, marker='o', color='C2')
+ax1.scatter(df['Soil A (ISO)'].loc['Cc'], df['Soil A (5g)'].loc['Cc'],
+            label='Soil A (5g)', s=ms, marker='o', color='C3')
+
+ax1.scatter(df['Soil C (ISO)'].loc['Cc'], df['Soil C'].loc['Cc'],
+            label='Soil C (20kg)', s=ms, marker='P', color='C0')
+ax1.plot([min_, max_], [min_, max_], color='black')
+middle = min_ + (max_ - min_) / 2
+ax1.text(x=middle, y=middle, s='1 : 1 line', rotation=45, va='top',
+         ha='center')
+
+ax1.set_xlim(left=min_, right=max_)
+ax1.set_ylim(bottom=min_, top=max_)
+ax1.set_aspect('equal')
+ax1.grid(alpha=0.5)
+ax1.set_title('Coefficient of Curvature')
+ax1.set_xlabel('tests with ISO sample weight')
+ax1.set_ylabel('tests with lower sample weight')
+ax1.legend()
+
+
+min_, max_ = df.loc['Cu'].min(), df.loc['Cu'].max()
+min_, max_ = min_-min_*0.1, max_+max_*0.1
+
+ax2.scatter(df['Soil A (ISO)'].loc['Cu'], df['Soil A (100g)'].loc['Cu'],
+            label='Soil A (100g)', s=ms, marker='o', color='C0')
+ax2.scatter(df['Soil A (ISO)'].loc['Cu'], df['Soil A (75g)'].loc['Cu'],
+            label='Soil A (75g)', s=ms, marker='o', color='C1')
+ax2.scatter(df['Soil A (ISO)'].loc['Cu'], df['Soil A (50g)'].loc['Cu'],
+            label='Soil A (50g)', s=ms, marker='o', color='C2')
+ax2.scatter(df['Soil A (ISO)'].loc['Cu'], df['Soil A (5g)'].loc['Cu'],
+            label='Soil A (5g)', s=ms, marker='o', color='C3')
+
+ax2.scatter(df['Soil C (ISO)'].loc['Cu'], df['Soil C'].loc['Cu'],
+            label='Soil C (20kg)', s=ms, marker='P', color='C0')
+ax2.plot([min_, max_], [min_, max_], color='black')
+middle = min_ + (max_ - min_) / 2
+ax2.text(x=10, y=10, s='1 : 1 line', rotation=45, va='top',
+         ha='center')
+
+ax2.set_xlim(left=min_, right=max_)
+ax2.set_ylim(bottom=min_, top=max_)
+ax2.set_aspect('equal')
+ax2.grid(alpha=0.5)
+ax2.set_title('Coefficient of Uniformity')
+ax2.set_xlabel('tests with ISO sample weight')
+ax2.set_ylabel('tests with lower sample weight')
+ax2.legend()
+ax2.set_xscale('log')
+ax2.set_yscale('log')
+
+plt.tight_layout()
+plt.savefig(r'../laboratory/lab_tests_CcCu_scatter.jpg', dpi=600)
 plt.close()
