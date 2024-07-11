@@ -139,5 +139,6 @@ try:
     df = pd.concat([df, df_new])
 except FileNotFoundError:
     df = df_new
+df['ID'] = np.arange(len(df))
 df.to_excel(fr'../simulations/{STUDY_NAME}.xlsx', index=False)
 print(f'{len(df)} samples processed')

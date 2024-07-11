@@ -6,41 +6,37 @@ relationships between parameters.
 Author: Georg H. Erharter (georg.erharter@ngi.no)
 """
 
-from scipy.optimize import curve_fit
+
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 import pandas as pd
 
-from X_library import laboratory, plotter
+from X_library import utilities, laboratory, plotter
 
 
-def exponential(x, a, b):
-    return a * np.exp(b*x)
-
-
-def fit_exponential(x, y):
-    # Perform the curve fit
-    p0 = [100, -1]
-    params, _ = curve_fit(exponential, x, y, p0=p0)
-
-    # Extract the fitted parameters
-    a_fit, b_fit = params
-    return a_fit, b_fit
-
+###############################
+# fixed values and constant variables
+###############################
 
 STUDY_NAME = '2024_07_07'  # study to work with or to create
 
+###############################
+# data loading and instantiations
+###############################
+
 df = pd.read_excel(fr'../simulations/{STUDY_NAME}.xlsx')
 print(len(df))
-lab, pltr = laboratory(), plotter()
+lab, pltr, utils = laboratory(), plotter(), utilities()
+
+###############################
+# plotting
+###############################
 
 # plot to visualize theoretically required sample mass
 pltr.required_weight_plot(300, '../figures/required_weight.svg')
 
-###############################
 # plot showing errors of ASTM and ISO
-###############################
 
 med_ISO = round(df['ISO ks [%]'].median(), 1)
 p95_ISO = round(np.percentile(df['ISO ks [%]'], 95), 1)
@@ -149,19 +145,19 @@ exponents.reverse()
 med_errors = [results[x][0] for x in exponents]
 p95_errors = [results[x][1] for x in exponents]
 
-med_a, med_b = fit_exponential(exponents, med_errors)
-p95_a, p95_b = fit_exponential(exponents, p95_errors)
+med_a, med_b = utils.fit_exponential(exponents, med_errors)
+p95_a, p95_b = utils.fit_exponential(exponents, p95_errors)
 
 
 fig, ax = plt.subplots()
 
 ax.scatter(exponents, med_errors, label='median error', color='C0')
 label = f'error = {round(med_a, 2)}e^({round(med_b, 2)}*exp)'
-ax.plot(exponents, exponential(np.array(exponents), med_a, med_b),
+ax.plot(exponents, utils.exponential(np.array(exponents), med_a, med_b),
         label=label, color='C0')
 ax.scatter(exponents, p95_errors, label='p95 error', color='C1')
 label = f'error = {round(p95_a, 2)}e^({round(p95_b, 2)}*exp)'
-ax.plot(exponents, exponential(np.array(exponents), p95_a, p95_b),
+ax.plot(exponents, utils.exponential(np.array(exponents), p95_a, p95_b),
         label=label, color='C1')
 
 ax.grid()

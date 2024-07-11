@@ -16,6 +16,7 @@ import matplotlib.ticker as ticker
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 import pandas as pd
+from scipy.optimize import curve_fit
 from tqdm import tqdm
 
 
@@ -247,6 +248,18 @@ class utilities:
             if val < x:
                 return False
         return True
+
+    def exponential(self, x, a, b):
+        return a * np.exp(b*x)
+
+    def fit_exponential(self, x, y):
+        # Perform the curve fit
+        p0 = [100, -1]
+        params, _ = curve_fit(self.exponential, x, y, p0=p0)
+
+        # Extract the fitted parameters
+        a_fit, b_fit = params
+        return a_fit, b_fit
 
 
 class plotter(laboratory):
