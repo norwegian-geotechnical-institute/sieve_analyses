@@ -262,7 +262,7 @@ class utilities:
         return a_fit, b_fit
 
 
-class plotter(laboratory):
+class plotter(laboratory, utilities):
 
     def required_weight_plot(self, max_grain_size: float, savepath: str,
                              close: bool = True) -> None:
@@ -273,8 +273,9 @@ class plotter(laboratory):
         ms_ASTM = [self.ASTM_required_sample_weight(ds)/1000 for ds in sizes]
 
         fig, ax = plt.subplots(figsize=(5, 5))
-        ax.plot(sizes, ms_ISO, color='black', label='ISO 17892-4', zorder=10)
-        ax.plot(sizes, ms_ASTM, color='black', ls='--',
+        ax.plot(sizes, ms_ISO, color='black', ls='--',
+                label='ISO 17892-4', zorder=10)
+        ax.plot(sizes, ms_ASTM, color='black', ls='-',
                 label='ASTM D6913/D6913M − 17', zorder=10)
         vlines = (20, 63, 200)
         ax.vlines(vlines, ymin=0, ymax=max(ms_ASTM), color='grey',
@@ -287,8 +288,248 @@ class plotter(laboratory):
         ax.set_ylabel('required sample weight [kg]')
         ax.set_xlim(left=2)
         ax.set_yscale('log')
-        ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: '{:g}'.format(y)))
+        ax.yaxis.set_major_formatter(
+            ticker.FuncFormatter(lambda y, _: '{:g}'.format(y)))
         ax.legend(loc='lower right', framealpha=1)
+
+        plt.tight_layout()
+        plt.savefig(savepath, dpi=600)
+        if close is True:
+            plt.close()
+
+    def error_violin_plot(self, df: pd.DataFrame, savepath: str, fsize=8,
+                          close: bool = True) -> None:
+        '''violin plots showing the KS-errors of sieve curves of soils sampled
+        according to ISO and ASTM standard'''
+        med_ISO = round(df['ISO ks [%]'].median(), 1)
+        p95_ISO = round(np.percentile(df['ISO ks [%]'], 95), 1)
+        med_ASTM = round(df['ASTM ks [%]'].median(), 1)
+        p95_ASTM = round(np.percentile(df['ASTM ks [%]'], 95), 1)
+
+        fig, ax = plt.subplots(figsize=(3.54331, 3))
+
+        parts = ax.violinplot([df['ISO ks [%]'], df['ASTM ks [%]']],
+                              showextrema=False, points=100, widths=0.7)
+        for pc in parts['bodies']:
+            pc.set_facecolor('grey')
+            pc.set_edgecolor('black')
+            pc.set_alpha(1)
+        ax.plot([1, 1], np.percentile(df['ISO ks [%]'], [5, 95]),
+                color='black')
+        ax.plot([2, 2], np.percentile(df['ASTM ks [%]'], [5, 95]),
+                color='black')
+        ax.scatter([1, 2], [med_ISO, med_ASTM], color='white',
+                   edgecolor='black', s=100, zorder=10)
+        ax.scatter([1, 2], [p95_ISO, p95_ASTM], color='black',
+                   edgecolor='black', s=50, zorder=10)
+        ax.text(x=1.07, y=med_ISO, s=r'$KS_{med}$' + f'\n{med_ISO}%',
+                fontsize=fsize)
+        ax.text(x=1.07, y=p95_ISO, s=r'$KS_{p95}$' + f'\n{p95_ISO}%',
+                fontsize=fsize, va='top')
+        ax.text(x=2.07, y=med_ASTM, s=r'$KS_{med}$' + f'\n{med_ASTM}%',
+                fontsize=fsize)
+        ax.text(x=2.07, y=p95_ASTM, s=r'$KS_{p95}$' + f'\n{p95_ASTM}%',
+                fontsize=fsize, va='top')
+
+        ax.grid(alpha=0.3)
+        ax.set_ylabel('Kolmogorov-Smirnov statisic [mass %]', fontsize=fsize)
+        ax.set_ylim(top=-1, bottom=15)
+        ax.set_xticks([1, 2], labels=['ISO 17892-4', 'ASTM D6913/D6913M – 17'],
+                      fontsize=fsize)
+        ax.tick_params(axis='both', labelsize=fsize)
+
+        plt.tight_layout()
+        plt.savefig(savepath, dpi=600)
+        if close is True:
+            plt.close()
+
+    def req_sample_mass_vs_dmax_plot(self, df: pd.DataFrame, savepath: str,
+                                     fsize=8, annotate_all=False,
+                                     annotate_some=None,
+                                     close: bool = True) -> None:
+        dmaxs = np.arange(200)
+        req_ISO = [self.ISO_required_sample_weight(dmax)/1000 for dmax in dmaxs]
+        req_ASTM = [self.ASTM_required_sample_weight(dmax)/1000 for dmax in dmaxs]
+
+        fig, ax = plt.subplots(figsize=(3.54331, 3))
+
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes('right', size='5%', pad=0.05)
+
+        im = ax.scatter(df['max diameter [mm]'],
+                        df['req. weight ks_p95 <= 10 [kg]'],
+                        c=df['S0'], cmap='Greys', edgecolor='black', lw=0.2,
+                        label='simulated samples', s=8)
+
+        ax.plot(dmaxs, req_ISO, color='dimgrey', ls='--',
+                label='ISO req. sample mass')
+        ax.plot(dmaxs, req_ASTM, color='dimgrey', ls='-',
+                label='ASTM req. sample mass')
+        if annotate_all is True:
+            for i in range(len(df)):
+                ax.text(x=df['max diameter [mm]'].iloc[i],
+                        y=df['req. weight ks_p95 <= 10 [kg]'].iloc[i],
+                        s=df['ID'].iloc[i])
+        if annotate_some is not None:
+            for id_ in annotate_some:
+                ax.scatter(df['max diameter [mm]'].iloc[id_],
+                           df['req. weight ks_p95 <= 10 [kg]'].iloc[id_],
+                           edgecolor='black', facecolors='none', s=20, lw=1,
+                           zorder=200)
+                t = ax.text(x=df['max diameter [mm]'].iloc[id_],
+                            y=df['req. weight ks_p95 <= 10 [kg]'].iloc[id_]+10,
+                            s=df['ID'].iloc[id_], ha='center', fontsize=fsize,
+                            weight='bold', zorder=100)
+                t.set_bbox(dict(facecolor='white', alpha=0.5, lw=0))
+
+        ax.set_xlabel('max diameter [mm]', fontsize=fsize)
+        ax.set_ylabel('req. sample weight [kg]', fontsize=fsize)
+        ax.grid(alpha=0.5)
+        ax.set_ylim(bottom=0, top=400)
+        ax.legend(fontsize=fsize, loc='upper left')
+
+        cbar = fig.colorbar(im, cax=cax, orientation='vertical')
+
+        cbar.set_label(label=r'sorting coefficient - $S_0$', fontsize=fsize)
+        ticks = cbar.ax.get_yticks()
+        ticklabs = cbar.ax.get_yticklabels()
+        cbar.ax.set_yticks(ticks)
+        cbar.ax.set_yticklabels(ticklabs, fontsize=fsize)
+        ax.tick_params(axis='both', labelsize=fsize)
+
+        plt.tight_layout()
+        plt.savefig(savepath, dpi=600)
+        if close is True:
+            plt.close()
+
+    def simple_sieve_plot(self, df: pd.DataFrame, ids: list, savepath: str,
+                          fsize=8, close: bool = True) -> None:
+        '''simple sieve curves plot to combine with
+        req_sample_mass_vs_dmax_plot'''
+        mpercs = [c for c in df.columns if ' mm sieve [m%]' in c]
+        ssizes = [eval(s.split(' ')[0]) for s in mpercs]
+        lss = ['-', '--', ':', '-.']
+
+        fig, ax = plt.subplots(figsize=(3.54331, 3))
+        for i, id_ in enumerate(ids):
+            ax.plot(ssizes, df[mpercs].iloc[id_].values, color='black',
+                    ls=lss[i], label=id_)
+
+        ax.set_xscale('log')
+        ax.set_xlabel('grain size [mm]', fontsize=fsize)
+        ax.set_ylabel('mass percentage passing [%]', fontsize=fsize)
+        ax.set_xticks([2, 63, 200])
+        ax.xaxis.set_major_formatter(ticker.FormatStrFormatter('%.0f'))
+        ax.grid(alpha=0.5)
+        ax.tick_params(axis='both', labelsize=fsize)
+        ax.legend(fontsize=fsize, loc='lower right')
+
+        plt.tight_layout()
+        plt.savefig(savepath, dpi=600)
+        if close is True:
+            plt.close()
+
+    def req_sample_mass_vs_d90_plot(self, df, savepath: str,
+                                    annotate_some=None, fsize=8,
+                                    close: bool = True) -> None:
+        fig, ax = plt.subplots(figsize=(3.54331, 3))
+
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes('right', size='5%', pad=0.05)
+
+        im = ax.scatter(df['d90'], df['req. weight ks_p95 <= 10 [kg]'],
+                        c=df['max diameter [mm]'], cmap='Greys',
+                        edgecolor='black', lw=0.2, s=8)
+        if annotate_some is not None:
+            for id_ in annotate_some:
+                ax.scatter(df['d90'].iloc[id_],
+                           df['req. weight ks_p95 <= 10 [kg]'].iloc[id_],
+                           edgecolor='black', facecolors='none', s=20, lw=1,
+                           zorder=200)
+                if id_ == 210:
+                    t = ax.text(
+                        x=df['d90'].iloc[id_],
+                        y=df['req. weight ks_p95 <= 10 [kg]'].iloc[id_]+10,
+                        s=df['ID'].iloc[id_], ha='left', fontsize=fsize,
+                        weight='bold', zorder=100)
+                else:
+                    t = ax.text(
+                        x=df['d90'].iloc[id_],
+                        y=df['req. weight ks_p95 <= 10 [kg]'].iloc[id_]+10,
+                        s=df['ID'].iloc[id_], ha='center', fontsize=fsize,
+                        weight='bold', zorder=100)
+                t.set_bbox(dict(facecolor='white', alpha=0.5, lw=0))
+
+        ax.set_xlabel('d90 [mm]', fontsize=fsize)
+        ax.set_ylabel('req. sample weight [kg]', fontsize=fsize)
+        ax.grid(alpha=0.5)
+        ax.set_ylim(bottom=0, top=400)
+
+        cbar = fig.colorbar(im, cax=cax, orientation='vertical')
+
+        cbar.set_label(label='max diameter [mm]', fontsize=fsize)
+        ticks = cbar.ax.get_yticks()
+        ticklabs = cbar.ax.get_yticklabels()
+        cbar.ax.set_yticks(ticks)
+        cbar.ax.set_yticklabels(ticklabs, fontsize=fsize)
+        ax.tick_params(axis='both', labelsize=fsize)
+
+        plt.tight_layout()
+        plt.savefig(savepath, dpi=600)
+        if close is True:
+            plt.close()
+
+    def exponents_plot(self, df: pd.DataFrame, savepath: str, fsize=8,
+                       close: bool = True) -> None:
+        # compute statistics
+        results = {}
+        for exp in np.arange(1, 2.6, step=0.1):
+            exp = round(exp, 1)
+            results[exp] = [df[f'new {exp} ks [%]'].median(),
+                            np.percentile(df[f'new {exp} ks [%]'], 95)]
+
+        exponents = list(results.keys())
+        exponents.reverse()
+        med_errors = [results[x][0] for x in exponents]
+        p95_errors = [results[x][1] for x in exponents]
+
+        med_a, med_b = self.fit_exponential(exponents, med_errors)
+        p95_a, p95_b = self.fit_exponential(exponents, p95_errors)
+
+        # plotting
+        fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(3.54331,
+                                                                  6.5))
+
+        x = np.arange(200)
+
+        for i, exp in enumerate(list(results.keys())):
+            if i % 2 == 0:  # only show every second function
+                y = ((x / 10)**exp)
+                ax1.plot(x, y,
+                         label=f'ε {exp}; med.e.:{round(results[exp][0], 1)}, p95 e.:{round(results[exp][1], 1)}')
+
+        ax1.grid(alpha=0.4)
+        ax1.legend(fontsize=fsize)
+        ax1.set_ylabel('req. sample weight (m) [kg]', fontsize=fsize)
+        ax1.set_xlabel('d90 [mm]', fontsize=fsize)
+        ax1.tick_params(axis='both', labelsize=fsize)
+
+        ax2.scatter(exponents, med_errors, label='median error', color='C0')
+        label = f'error = {round(med_a, 2)}e^({round(med_b, 2)}*exp)'
+        ax2.plot(exponents,
+                 self.exponential(np.array(exponents), med_a, med_b),
+                 label=label, color='C0')
+        ax2.scatter(exponents, p95_errors, label='p95 error', color='C1')
+        label = f'error = {round(p95_a, 2)}e^({round(p95_b, 2)}*exp)'
+        ax2.plot(exponents,
+                 self.exponential(np.array(exponents), p95_a, p95_b),
+                 label=label, color='C1')
+
+        ax2.grid()
+        ax2.legend(fontsize=fsize)
+        ax2.set_xlabel('exponent', fontsize=fsize)
+        ax2.set_ylabel('error', fontsize=fsize)
+        ax2.tick_params(axis='both', labelsize=fsize)
 
         plt.tight_layout()
         plt.savefig(savepath, dpi=600)
