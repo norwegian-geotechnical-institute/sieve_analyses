@@ -6,9 +6,6 @@ relationships between parameters.
 Author: Georg H. Erharter (georg.erharter@ngi.no)
 """
 
-
-import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 import pandas as pd
 
@@ -22,55 +19,58 @@ from X_library import utilities, laboratory, plotter
 STUDY_NAME = '2024_07_07'  # study to work with or to create
 
 ###############################
-# data loading and instantiations
+# data loading, instantiations and some data processing
 ###############################
 
 df = pd.read_excel(fr'../simulations/{STUDY_NAME}.xlsx')
 print(len(df))
 lab, pltr, utils = laboratory(), plotter(), utilities()
 
+# apply new functions to compute sample mass recommendations with ISO and
+# ASTM p95 errors: ISO 7.7, ASTM 5.3
+df['new. req. mass ISO [kg]'] = (df['d90']/10)**((np.log(7.7)-np.log(123.65))/-1.29)
+df['new. req. mass ASTM [kg]'] = (df['d90']/10)**((np.log(5.3)-np.log(123.65))/-1.29)
+# ratio
+df['comparison ISO'] = df['ISO req. mass [kg]'] / df['new. req. mass ISO [kg]']
+df['comparison ASTM'] = df['ASTM req. mass [kg]'] / df['new. req. mass ASTM [kg]']
+print(f"ISO mass = {round(df['comparison ISO'].mean(), 2)} larger on avg")
+print(f"ISO mass = {round(df['comparison ISO'].max(), 2)} larger at max")
+print(f"ASTM mass = {round(df['comparison ASTM'].mean(), 2)} larger on avg")
+print(f"ASTM mass = {round(df['comparison ASTM'].max(), 2)} larger at max")
+# move ID column to the front
+ID_column = df.pop('ID')
+df.insert(0, 'ID', ID_column)
+df.to_excel(r'../simulations/MonteCarloSimulations.xlsx', index=False)
+
 ###############################
 # plotting
 ###############################
 
 # plot to visualize theoretically required sample mass
-pltr.required_weight_plot(300, '../figures/required_weight.svg')
+pltr.required_mass_plot(300, '../figures/required_mass.svg')
 
 # plot showing errors of ASTM and ISO
 pltr.error_violin_plot(df, r'../figures/error_violin.jpg')
-
 
 # scatterplot showing required sample mass against max diameter
 pltr.req_sample_mass_vs_dmax_plot(df, annotate_all=False,
                                   annotate_some=[310, 210, 94, 52],
                                   close=True,
-                                  savepath=r'../figures/req_weight_dmax.jpg')
+                                  savepath=r'../figures/req_mass_dmax.jpg')
 
 # plot individual simplified sieve curves for combined plots
-# 310 ... max req. weight, 210 ... max dmax & max req. weight, 94... min dmax
+# 310 ... max req. mass, 210 ... max dmax & max req. mass, 94... min dmax
 # 52 ... center
 pltr.simple_sieve_plot(df, ids=[310, 210, 94, 52], close=True,
-                       savepath=r'../figures/req_weight_dmax_samples.jpg')
+                       savepath=r'../figures/req_mass_dmax_samples.jpg')
 
 # plot showing required sample mass against d90
 pltr.req_sample_mass_vs_d90_plot(df, annotate_some=[310, 94, 210, 52],
-                                 savepath=r'../figures/req_weight_d90.jpg')
+                                 savepath=r'../figures/req_mass_d90.jpg')
 
 # plot showing new m_min functions with different epsilon
 # and plot showing relationship between exponent and errors
 pltr.exponents_plot(df, savepath=r'../figures/exponents.jpg')
-
-# apply new functions to compute sample weight recommendations with ISO and
-# ASTM p95 errors: ISO 7.7, ASTM 5.3
-df['new. req. weight ISO [kg]'] = (df['d90']/10)**((np.log(7.7)-np.log(123.65))/-1.29)
-df['new. req. weight ASTM [kg]'] = (df['d90']/10)**((np.log(5.3)-np.log(123.65))/-1.29)
-# ratio
-df['comparison ISO'] = df['ISO req. weight [kg]'] / df['new. req. weight ISO [kg]']
-df['comparison ASTM'] = df['ASTM req. weight [kg]'] / df['new. req. weight ASTM [kg]']
-print(f"ISO weight = {df['comparison ISO'].mean()} larger on avg")
-print(f"ISO weight = {df['comparison ISO'].max()} larger at max")
-print(f"ASTM weight = {df['comparison ASTM'].mean()} larger on avg")
-print(f"ASTM weight = {df['comparison ASTM'].max()} larger at max")
 
 # plot showing a comparison between standard required sample masses and new one
 pltr.comparison_plot(df, savepath=r'../figures/comparison.jpg')
@@ -95,10 +95,12 @@ pltr.real_sieve_curves_scatter(r'../laboratory/lab_tests_CcCu_scatter.jpg')
 # other analyses of the simulations
 ###############################
 
+# check correlation between parameters and "bottom up" determined required
+# sample mass
 for f in ['Cu', 'Cc', 'S0', 'max diameter [mm]', 'd10', 'd12', 'd25',
           'd30', 'd50', 'd60', 'd75', 'd90']:
-    cc = np.corrcoef(df[f], df['req. weight ks_p95 <= 10 [kg]'])[0][1]
-    print(f'{round(cc, 2)} = corr. coeff. {f} - required weight')
+    cc = np.corrcoef(df[f], df['req. mass ks_p95 <= 10 [kg]'])[0][1]
+    print(f'{round(cc, 2)} = corr. coeff. {f} - required mass')
 
 # # new parameter for grading characterization
 # df['grading'] = np.mean(np.vstack(((np.log(df['d30']) - np.log(df['d10'])),

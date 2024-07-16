@@ -30,77 +30,77 @@ class statistics:
 
 class laboratory(statistics):
 
-    def ISO_required_sample_weight(self, d_max: float) -> float:
-        '''calculate required sample weight acc. to ISO 17892-4'''
+    def ISO_required_sample_mass(self, d_max: float) -> float:
+        '''calculate required sample mass acc. to ISO 17892-4'''
         if d_max <= 2:  # [mm]
-            weight = 100
+            mass = 100
         elif d_max <= 6.3:
-            weight = 300
+            mass = 300
         elif d_max <= 10:
-            weight = 500
+            mass = 500
         elif d_max <= 20:
-            weight = 2000
+            mass = 2000
         else:
-            weight = ((d_max / 10)**2) * 1000
-        return weight  # [g]
+            mass = ((d_max / 10)**2) * 1000
+        return mass  # [g]
 
-    def ASTM_required_sample_weight(self, d_max: float) -> float:
-        '''calculate required sample weight acc. to ASTM D6913/D6913M − 17,
+    def ASTM_required_sample_mass(self, d_max: float) -> float:
+        '''calculate required sample mass acc. to ASTM D6913/D6913M − 17,
         method A'''
         density = 3  # [g/mm3] ... ASTM seems to use this high grain density
 
         if d_max <= 4.75:
-            weight = 50
+            mass = 50
         elif d_max <= 9.5:
-            weight = 75
+            mass = 75
         elif d_max <= 76.2:
             v = (4/3)*np.pi*(d_max/2)**3  # [mm3]
             v = v / 1000  # [cm3]
             m = v * density / 1000  # [kg]
             factor = 1.2
-            weight = m * 100 * factor * 1000
+            mass = m * 100 * factor * 1000
         else:
             v = (4/3)*np.pi*(d_max/2)**3  # [mm3]
             v = v / 1000  # [cm3]
             m = v * density / 1000  # [kg]
-            weight = m * 100 * 1000
-        return weight  # [g]
+            mass = m * 100 * 1000
+        return mass  # [g]
 
-    def new_sample_weight(self, d_max: float, d90: float,
-                          exponent: float = 2) -> float:
-        '''new equation to determine sample weight based on d90'''
+    def new_sample_mass(self, d_max: float, d90: float,
+                        exponent: float = 2) -> float:
+        '''new equation to determine sample mass based on d90'''
         if d_max <= 2:  # [mm]
-            weight = 100
+            mass = 100
         elif d_max <= 6.3:
-            weight = 300
+            mass = 300
         elif d_max <= 10:
-            weight = 500
+            mass = 500
         elif d_max <= 20:
-            weight = 2000
+            mass = 2000
         else:
-            weight = ((d90 / 10)**exponent) * 1000
-        return weight  # [g]
+            mass = ((d90 / 10)**exponent) * 1000
+        return mass  # [g]
 
-    def get_sample(self, required_sample_weight: float, total_weight: float,
-                   grain_weights: np.array, grain_diameters: np.array,
+    def get_sample(self, required_sample_mass: float, total_mass: float,
+                   grain_masses: np.array, grain_diameters: np.array,
                    strategy: str = 'random choice') -> list:
-        '''get a sample with a specific weight from the total number of grains
-        by gathering single grains until th desired weight is reached'''
+        '''get a sample with a specific mass from the total number of grains
+        by gathering single grains until the desired mass is reached'''
 
-        fraction = required_sample_weight / total_weight
+        fraction = required_sample_mass / total_mass
         match strategy:  # noqa
             case 'from start':
                 split = int(len(grain_diameters)*fraction)
                 sample_ids = np.arange(split)
-                sample_weights = grain_weights[:split]
+                sample_masses = grain_masses[:split]
                 sample_diameters = grain_diameters[:split]
             case 'random choice':
                 n_grains = int(len(grain_diameters)*fraction)
                 sample_ids = np.random.choice(np.arange(len(grain_diameters)),
                                               size=n_grains, replace=False)
-                sample_weights = grain_weights[sample_ids]
+                sample_masses = grain_masses[sample_ids]
                 sample_diameters = grain_diameters[sample_ids]
-        return sample_ids, sample_weights, sample_diameters
+        return sample_ids, sample_masses, sample_diameters
 
     def make_grains(self, DENSITY: float, TOT_MASS: float,
                     min_d: float = 1, max_d: float = 200,
@@ -118,12 +118,12 @@ class laboratory(statistics):
         fractions = np.sort(fractions)
 
         diameters = []
-        tot_weight = 0
+        tot_mass = 0
 
         for i in range(len(fractions)):
             lower, upper = sorted(np.exp(np.random.uniform(np.log(min_d),
                                                            np.log(max_d), 2)))
-            while tot_weight < sum(fractions[:i+1]) * TOT_MASS:
+            while tot_mass < sum(fractions[:i+1]) * TOT_MASS:
                 if upper < 3:
                     n_grains = 2000
                 elif upper < 6:
@@ -137,29 +137,29 @@ class laboratory(statistics):
                 diameter = make_beta(lower, upper, n_grains)
                 volume = ((4/3)*np.pi*((diameter/2)**3)) / 1000  # [cm3]
                 try:
-                    tot_weight += volume.sum() * DENSITY / 1000
+                    tot_mass += volume.sum() * DENSITY / 1000
                 except AttributeError:
-                    tot_weight += volume * DENSITY / 1000
+                    tot_mass += volume * DENSITY / 1000
                 diameters.append(diameter)
 
         diameters = np.hstack(diameters)
         np.random.shuffle(diameters)
         volumes = (4/3)*np.pi*(diameters/2)**3  # [mm3]
         volumes = volumes / 1000  # [cm3]
-        weights = volumes * DENSITY / 1000  # [kg]
+        masses = volumes * DENSITY / 1000  # [kg]
         ids = np.arange(len(diameters))
-        return diameters, weights, ids
+        return diameters, masses, ids
 
-    def sieve(self, ids: np.array, diameters: np.array, weights: np.array,
+    def sieve(self, ids: np.array, diameters: np.array, masses: np.array,
               sieve_sizes: list) -> dict:
         '''make a virtual sieve analysis of the sample'''
-        tot_weight = weights.sum()
+        tot_mass = masses.sum()
         fractions = []
         for size in sieve_sizes:
             fraction_ids = np.where(diameters < size)[0]
-            fraction_weight = weights[fraction_ids].sum()
+            fraction_mass = masses[fraction_ids].sum()
             try:
-                fraction = (fraction_weight / tot_weight) * 100
+                fraction = (fraction_mass / tot_mass) * 100
             except ZeroDivisionError:
                 fraction = 0
             fractions.append(fraction)
@@ -208,36 +208,36 @@ class laboratory(statistics):
 
         return soil_class
 
-    def check_required_weight(self, max_error: float,  # [%]
-                              weight_steps: float,  # steps to increase weight
-                              tests_per_step: int, total_weight: float,
-                              grain_weights: np.array,
-                              grain_diameters: np.array, SIEVE_SIZES: list,
-                              fractions_true: dict,
-                              verbose: bool = False):
+    def check_required_mass(self, max_error: float,  # [%]
+                            mass_steps: float,  # steps to increase mass
+                            tests_per_step: int, total_mass: float,
+                            grain_masses: np.array,
+                            grain_diameters: np.array, SIEVE_SIZES: list,
+                            fractions_true: dict,
+                            verbose: bool = False):
         '''function computes the theoretically required mass to achieve a
         defined error by gathering sequentially more soil. Criterium is p95
         percentile of errors below max_error'''
-        ks_p95, weight = 2*max_error, 0  # initialize parameters
+        ks_p95, mass = 2*max_error, 0  # initialize parameters
         while ks_p95 > max_error:
-            weight += weight_steps
-            weights_temp, ks_s_temp = [], []
+            mass += mass_steps
+            masses_temp, ks_s_temp = [], []
             # make multiple tests to reduce randomnes
             for _ in range(tests_per_step):
-                sample_ids, sample_weights, sample_diameter = self.get_sample(
-                    weight, total_weight, grain_weights, grain_diameters,
+                sample_ids, sample_masses, sample_diameter = self.get_sample(
+                    mass, total_mass, grain_masses, grain_diameters,
                     strategy='random choice')
                 fractions = self.sieve(sample_ids, sample_diameter,
-                                       sample_weights, SIEVE_SIZES)
-                weights_temp.append(sample_weights.sum())
+                                       sample_masses, SIEVE_SIZES)
+                masses_temp.append(sample_masses.sum())
                 ks_s_temp.append(self.ks_statistic(
                     list(fractions_true.values()), list(fractions.values())))
-            weight_avg = np.mean(weights_temp)
+            mass_avg = np.mean(masses_temp)
             ks_p95 = np.percentile(ks_s_temp, 95)
             if verbose is True:
-                print(f'{round(weight_avg, 1)} kg\t\tp95 {round(ks_p95, 1)}')
+                print(f'{round(mass_avg, 1)} kg\t\tp95 {round(ks_p95, 1)}')
 
-        return weight  # required weight [kg]
+        return mass  # required mass [kg]
 
 
 class utilities:
@@ -268,13 +268,13 @@ class plotter(laboratory, utilities):
         self.fsize = 8  # main font size for plots
         self.lss = ['-', '--', ':', '-.'] * 2  # choice of linestyles
 
-    def required_weight_plot(self, max_grain_size: float, savepath: str,
-                             close: bool = True) -> None:
-        '''plot that shows the theoretically required sample weight acc. to the
+    def required_mass_plot(self, max_grain_size: float, savepath: str,
+                           close: bool = True) -> None:
+        '''plot that shows the theoretically required sample mass acc. to the
         standards'''
         sizes = np.arange(max_grain_size)  # [mm]
-        ms_ISO = [self.ISO_required_sample_weight(ds)/1000 for ds in sizes]
-        ms_ASTM = [self.ASTM_required_sample_weight(ds)/1000 for ds in sizes]
+        ms_ISO = [self.ISO_required_sample_mass(ds)/1000 for ds in sizes]
+        ms_ASTM = [self.ASTM_required_sample_mass(ds)/1000 for ds in sizes]
 
         fig, ax = plt.subplots(figsize=(3.54331, 3.54331))
         ax.plot(sizes, ms_ISO, color='black', ls='--',
@@ -289,7 +289,7 @@ class plotter(laboratory, utilities):
                     va='top', fontsize=self.fsize)
         ax.grid(alpha=0.5, axis='y')
         ax.set_xlabel('max. grain diameter of soil [mm]', fontsize=self.fsize)
-        ax.set_ylabel('required sample weight [kg]', fontsize=self.fsize)
+        ax.set_ylabel('required sample mass [kg]', fontsize=self.fsize)
         ax.set_xlim(left=2)
         ax.set_yscale('log')
         ax.yaxis.set_major_formatter(
@@ -353,8 +353,8 @@ class plotter(laboratory, utilities):
                                      annotate_all=False, annotate_some=None,
                                      close: bool = True) -> None:
         dmaxs = np.arange(200)
-        req_ISO = [self.ISO_required_sample_weight(dmax)/1000 for dmax in dmaxs]
-        req_ASTM = [self.ASTM_required_sample_weight(dmax)/1000 for dmax in dmaxs]
+        req_ISO = [self.ISO_required_sample_mass(dmax)/1000 for dmax in dmaxs]
+        req_ASTM = [self.ASTM_required_sample_mass(dmax)/1000 for dmax in dmaxs]
 
         fig, ax = plt.subplots(figsize=(3.54331, 3))
 
@@ -362,7 +362,7 @@ class plotter(laboratory, utilities):
         cax = divider.append_axes('right', size='5%', pad=0.05)
 
         im = ax.scatter(df['max diameter [mm]'],
-                        df['req. weight ks_p95 <= 10 [kg]'],
+                        df['req. mass ks_p95 <= 10 [kg]'],
                         c=df['S0'], cmap='Greys', edgecolor='black', lw=0.2,
                         label='simulated samples', s=8)
 
@@ -373,22 +373,22 @@ class plotter(laboratory, utilities):
         if annotate_all is True:
             for i in range(len(df)):
                 ax.text(x=df['max diameter [mm]'].iloc[i],
-                        y=df['req. weight ks_p95 <= 10 [kg]'].iloc[i],
+                        y=df['req. mass ks_p95 <= 10 [kg]'].iloc[i],
                         s=df['ID'].iloc[i])
         if annotate_some is not None:
             for id_ in annotate_some:
                 ax.scatter(df['max diameter [mm]'].iloc[id_],
-                           df['req. weight ks_p95 <= 10 [kg]'].iloc[id_],
+                           df['req. mass ks_p95 <= 10 [kg]'].iloc[id_],
                            edgecolor='black', facecolors='none', s=20, lw=1,
                            zorder=200)
                 t = ax.text(x=df['max diameter [mm]'].iloc[id_],
-                            y=df['req. weight ks_p95 <= 10 [kg]'].iloc[id_]+10,
+                            y=df['req. mass ks_p95 <= 10 [kg]'].iloc[id_]+10,
                             s=df['ID'].iloc[id_], ha='center',
                             fontsize=self.fsize, weight='bold', zorder=100)
                 t.set_bbox(dict(facecolor='white', alpha=0.5, lw=0))
 
         ax.set_xlabel('max diameter [mm]', fontsize=self.fsize)
-        ax.set_ylabel('req. sample weight [kg]', fontsize=self.fsize)
+        ax.set_ylabel('req. sample mass [kg]', fontsize=self.fsize)
         ax.grid(alpha=0.5)
         ax.set_ylim(bottom=0, top=400)
         ax.legend(fontsize=self.fsize, loc='upper left')
@@ -442,31 +442,31 @@ class plotter(laboratory, utilities):
         divider = make_axes_locatable(ax)
         cax = divider.append_axes('right', size='5%', pad=0.05)
 
-        im = ax.scatter(df['d90'], df['req. weight ks_p95 <= 10 [kg]'],
+        im = ax.scatter(df['d90'], df['req. mass ks_p95 <= 10 [kg]'],
                         c=df['max diameter [mm]'], cmap='Greys',
                         edgecolor='black', lw=0.2, s=8)
         if annotate_some is not None:
             for id_ in annotate_some:
                 ax.scatter(df['d90'].iloc[id_],
-                           df['req. weight ks_p95 <= 10 [kg]'].iloc[id_],
+                           df['req. mass ks_p95 <= 10 [kg]'].iloc[id_],
                            edgecolor='black', facecolors='none', s=20, lw=1,
                            zorder=200)
                 if id_ == 210:
                     t = ax.text(
                         x=df['d90'].iloc[id_],
-                        y=df['req. weight ks_p95 <= 10 [kg]'].iloc[id_]+10,
+                        y=df['req. mass ks_p95 <= 10 [kg]'].iloc[id_]+10,
                         s=df['ID'].iloc[id_], ha='left', fontsize=self.fsize,
                         weight='bold', zorder=100)
                 else:
                     t = ax.text(
                         x=df['d90'].iloc[id_],
-                        y=df['req. weight ks_p95 <= 10 [kg]'].iloc[id_]+10,
+                        y=df['req. mass ks_p95 <= 10 [kg]'].iloc[id_]+10,
                         s=df['ID'].iloc[id_], ha='center', fontsize=self.fsize,
                         weight='bold', zorder=100)
                 t.set_bbox(dict(facecolor='white', alpha=0.5, lw=0))
 
         ax.set_xlabel('d90 [mm]', fontsize=self.fsize)
-        ax.set_ylabel('req. sample weight [kg]', fontsize=self.fsize)
+        ax.set_ylabel('req. sample mass [kg]', fontsize=self.fsize)
         ax.grid(alpha=0.5)
         ax.set_ylim(bottom=0, top=400)
 
@@ -507,7 +507,6 @@ class plotter(laboratory, utilities):
 
         x = np.arange(200)
         colors = ['black'] * 4 + ['grey'] * 4
-        print(colors)
 
         for i, exp in enumerate(list(results.keys())):
             if i % 2 == 0:  # only show every second function
@@ -552,27 +551,27 @@ class plotter(laboratory, utilities):
         fig, (ax1, ax2) = plt.subplots(ncols=1, nrows=2,
                                        figsize=(3.54331, 6.5))
 
-        ax1.scatter(df['ISO req. weight [kg]'],
-                    df['new. req. weight ISO [kg]'],
+        ax1.scatter(df['ISO req. mass [kg]'],
+                    df['new. req. mass ISO [kg]'],
                     color='grey', alpha=0.4, s=10)
         ax1.plot([0, 400], [0, 400], color='black', lw=2, ls='--')
         ax1.text(400, 400, '1:1', weight='bold', fontsize=self.fsize,
                  ha='right')
         ax1.grid(alpha=0.5)
-        ax1.set_xlabel('ISO req. weight [kg]', fontsize=self.fsize)
-        ax1.set_ylabel('req. weight acc. new criterium [kg]',
+        ax1.set_xlabel('ISO req. mass [kg]', fontsize=self.fsize)
+        ax1.set_ylabel('req. mass acc. new criterium [kg]',
                        fontsize=self.fsize)
         ax1.tick_params(axis='both', labelsize=self.fsize)
 
-        ax2.scatter(df['ASTM req. weight [kg]'],
-                    df['new. req. weight ASTM [kg]'],
+        ax2.scatter(df['ASTM req. mass [kg]'],
+                    df['new. req. mass ASTM [kg]'],
                     color='grey', alpha=0.4, s=10)
         ax2.plot([0, 1200], [0, 1200], color='black', lw=2, ls='--')
         ax2.text(1200, 1200, '1:1', weight='bold', fontsize=self.fsize,
                  ha='right')
         ax2.grid(alpha=0.5)
-        ax2.set_xlabel('ASTM req. weight [kg]', fontsize=self.fsize)
-        ax2.set_ylabel('req. weight acc. new criterium [kg]',
+        ax2.set_xlabel('ASTM req. mass [kg]', fontsize=self.fsize)
+        ax2.set_ylabel('req. mass acc. new criterium [kg]',
                        fontsize=self.fsize)
         ax2.tick_params(axis='both', labelsize=self.fsize)
 
@@ -645,8 +644,8 @@ class plotter(laboratory, utilities):
         ax1.set_aspect('equal')
         ax1.grid(alpha=0.5)
         ax1.set_title('Coefficient of Curvature', fontsize=self.fsize)
-        ax1.set_xlabel('tests with ISO sample weight', fontsize=self.fsize)
-        ax1.set_ylabel('tests with lower sample weight', fontsize=self.fsize)
+        ax1.set_xlabel('tests with ISO sample mass', fontsize=self.fsize)
+        ax1.set_ylabel('tests with lower sample mass', fontsize=self.fsize)
         ax1.legend(fontsize=self.fsize)
         ax1.tick_params(axis='both', labelsize=self.fsize)
 
@@ -678,8 +677,8 @@ class plotter(laboratory, utilities):
         ax2.set_aspect('equal')
         ax2.grid(alpha=0.5)
         ax2.set_title('Coefficient of Uniformity', fontsize=self.fsize)
-        ax2.set_xlabel('tests with ISO sample weight', fontsize=self.fsize)
-        ax2.set_ylabel('tests with lower sample weight', fontsize=self.fsize)
+        ax2.set_xlabel('tests with ISO sample mass', fontsize=self.fsize)
+        ax2.set_ylabel('tests with lower sample mass', fontsize=self.fsize)
         ax2.legend(fontsize=self.fsize)
         ax2.set_xscale('log')
         ax2.set_yscale('log')
@@ -690,16 +689,16 @@ class plotter(laboratory, utilities):
         if close is True:
             plt.close()
 
-    def distances_plot(self, req_sample_weights: list, ks_distances: list,
+    def distances_plot(self, req_sample_masses: list, ks_distances: list,
                        savepath: str, close: bool = True) -> None:
         '''plot an underlying soil distribution vs. distributions of different
         samples with reduced mass and also their kolmogorov smirnov distance'''
         fig, ax = plt.subplots(figsize=(6, 6), nrows=1, ncols=1)
 
-        ax.scatter(req_sample_weights, ks_distances, color='C0',
+        ax.scatter(req_sample_masses, ks_distances, color='C0',
                    edgecolor='black', s=60)
         ax.grid(alpha=0.5)
-        ax.set_xlabel('sample weight [kg]')
+        ax.set_xlabel('sample mass [kg]')
         ax.set_ylabel('kolmogorov smirnov distance', color='C0')
 
         plt.tight_layout()
@@ -814,7 +813,7 @@ class plotter(laboratory, utilities):
                           color: pd.Series = None,
                           savepath: str = None,
                           sieved_samples: list = None,
-                          req_sample_weights: list = None,
+                          req_sample_masses: list = None,
                           ks_distances: list = None,
                           close: bool = True) -> None:
         '''plot sieve curves of underlying soil distribution and taken
@@ -839,7 +838,7 @@ class plotter(laboratory, utilities):
             for i in range(len(sieved_samples)):
                 ax.plot(
                     SIEVE_SIZES, np.array(sieved_samples[i]),
-                    label=f"sample {round(req_sample_weights[i], 1)}kg  ks: {round(ks_distances[i], 1)} %",
+                    label=f"sample {round(req_sample_masses[i], 1)}kg  ks: {round(ks_distances[i], 1)} %",
                     alpha=0.8)
 
         ax.legend(loc='upper left', fontsize=12)
@@ -847,92 +846,6 @@ class plotter(laboratory, utilities):
         plt.tight_layout()
         if savepath is not None:
             plt.savefig(savepath, dpi=600)
-        if close is True:
-            plt.close()
-
-    def monte_carlo_scatterplot_legacy(self, df: pd.DataFrame, weight_mode: str,
-                                color_mode: str, savepath: str,
-                                close: bool = True) -> None:
-        # old plot that is not required anymore -> TODO remove
-        '''scatterplot that shows results of the monte carlo simulations in the
-        form of different soil distribution parameters Cu, Cc etc. vs. a metric
-        of how well the sample fits the underlying distribution'''
-
-        ks_median = df[f'kolmogorov smirnov distance {weight_mode}'].median()
-        ks_p95 = np.percentile(df[f'kolmogorov smirnov distance {weight_mode}'], 95)
-
-        fig, (ax1, ax2, ax3, ax4) = plt.subplots(nrows=1, ncols=4,
-                                                 figsize=(20, 6))
-        match color_mode:  # noqa
-            case 'USCS':
-                for sc in df.groupby('USCS soil classes'):
-                    ax1.scatter(
-                        sc[1]['Cu'],
-                        sc[1][f'kolmogorov smirnov distance {weight_mode}'],
-                        alpha=0.5, label=sc[0])
-                    ax2.scatter(
-                        sc[1]['Cc'],
-                        sc[1][f'kolmogorov smirnov distance {weight_mode}'],
-                        alpha=0.5, label=sc[0])
-                    ax3.scatter(
-                        sc[1]['S0'],
-                        sc[1][f'kolmogorov smirnov distance {weight_mode}'],
-                        alpha=0.5, label=sc[0])
-                    ax4.scatter(
-                        sc[1]['max diameter [mm]'],
-                        sc[1][f'kolmogorov smirnov distance {weight_mode}'],
-                        alpha=0.5, label=sc[0])
-
-                ax3.axhline(y=ks_median, color='black', ls='-',
-                            label=f'med. error {round(ks_median, 1)}, p95 {round(ks_p95, 1)}')
-                ax3.axhline(y=ks_p95, color='black', ls='--')
-
-                ax1.legend()
-                ax2.legend()
-                ax3.legend()
-                ax4.legend()
-            case 'weight':
-                ax1.scatter(df['Cu'],
-                            df[f'kolmogorov smirnov distance {weight_mode}'],
-                            c=df[f'req. weight {weight_mode} [kg]'], alpha=0.5)
-                ax2.scatter(df['Cc'],
-                            df[f'kolmogorov smirnov distance {weight_mode}'],
-                            c=df[f'req. weight {weight_mode} [kg]'], alpha=0.5)
-                ax3.scatter(df['S0'],
-                            df[f'kolmogorov smirnov distance {weight_mode}'],
-                            c=df[f'req. weight {weight_mode} [kg]'], alpha=0.5)
-                im = ax4.scatter(
-                    df['max diameter [mm]'],
-                    df[f'kolmogorov smirnov distance {weight_mode}'],
-                    c=df[f'req. weight {weight_mode} [kg]'], alpha=0.5)
-                divider = make_axes_locatable(ax4)
-                cax = divider.append_axes('right', size='5%', pad=0.05)
-                fig.colorbar(im, cax=cax, orientation='vertical',
-                             label='required sample weight [kg]')
-
-        ax1.grid(alpha=0.5)
-        ax1.set_ylabel(f'kolmogorov smirnov distance {weight_mode}')
-        ax1.set_xlabel('coefficient of uniformity\nCu  d60/d10')
-        ax1.set_yscale('log')
-        ax1.set_ylim(top=100, bottom=0.01)
-
-        ax2.grid(alpha=0.5)
-        ax2.set_xlabel('coefficient of curvature\nCc  d30**2/(d60*d10)')
-        ax2.set_yscale('log')
-        ax2.set_ylim(top=100, bottom=0.01)
-
-        ax3.grid(alpha=0.5)
-        ax3.set_xlabel('sorting coefficient\nS0 sqrt(d75/d25)')
-        ax3.set_yscale('log')
-        ax3.set_ylim(top=100, bottom=0.01)
-
-        ax4.grid(alpha=0.5)
-        ax4.set_xlabel('maximum soil grainsize [mm]')
-        ax4.set_yscale('log')
-        ax4.set_ylim(top=100, bottom=0.01)
-
-        plt.tight_layout()
-        plt.savefig(savepath, dpi=600)
         if close is True:
             plt.close()
 
@@ -1002,7 +915,7 @@ class sample_preview:
 
         return grain_xs, grain_ys
 
-    def plot_grains(self, grain_diameters, BOX_SIZE, SEED, Cu, S0, weight,
+    def plot_grains(self, grain_diameters, BOX_SIZE, SEED, Cu, S0, mass,
                     savepath: str, close: bool = True) -> None:
         # preprocessing of grains and initialize positions
         grain_diameters = grain_diameters / 1000
@@ -1064,7 +977,7 @@ class sample_preview:
         ax.set_ylim(0, BOX_SIZE)
         ax.get_xaxis().set_ticks([])
         ax.get_yaxis().set_ticks([])
-        ax.set_title(f'seed {SEED}; Cu: {round(Cu, 2)}, S0: {round(S0, 2)}, weight: {weight} kg')
+        ax.set_title(f'seed {SEED}; Cu: {round(Cu, 2)}, S0: {round(S0, 2)}, mass: {mass} kg')
         ax.set_xlabel(f'{BOX_SIZE} meters')
 
         plt.tight_layout()
@@ -1084,11 +997,11 @@ if __name__ == '__main__':
     fractions_trues, max_diameters = [], []
 
     for i in range(400):
-        grain_diameters, grain_weights, grain_ids = lab.make_grains(
+        grain_diameters, grain_masses, grain_ids = lab.make_grains(
             DENSITY, TOT_MASS=TOT_MASS)
         Dmax = grain_diameters.max()
-        print(i, grain_weights.sum())
-        fractions_true = lab.sieve(grain_ids, grain_diameters, grain_weights,
+        print(i, grain_masses.sum())
+        fractions_true = lab.sieve(grain_ids, grain_diameters, grain_masses,
                                    SIEVE_SIZES)
         fractions_trues.append(list(fractions_true.values()))
         max_diameters.append(Dmax)
