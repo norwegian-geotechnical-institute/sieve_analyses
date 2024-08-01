@@ -21,6 +21,7 @@ from tqdm import tqdm
 
 
 class statistics:
+    '''class with use case specfic statistical functions'''
 
     def ks_statistic(self, sieve_curve1: list, sieve_curve2: list) -> float:
         '''calculate Kolmogorov-Smirnov (KS) statistic for 2 sieve curves'''
@@ -29,6 +30,7 @@ class statistics:
 
 
 class laboratory(statistics):
+    '''class with functions for simulating laboratory sieve tests'''
 
     def ISO_required_sample_mass(self, d_max: float) -> float:
         '''calculate required sample mass acc. to ISO 17892-4'''
@@ -241,6 +243,7 @@ class laboratory(statistics):
 
 
 class utilities:
+    '''class with general purpose functions that do not fit anywhere else'''
 
     def CheckForLess(self, list1, val):
         '''function checks if any of values in list1 is smaller than val'''
@@ -249,20 +252,21 @@ class utilities:
                 return False
         return True
 
-    def exponential(self, x, a, b):
+    def exponential(self, x: np.array, a: float, b: float) -> np.array:
+        '''exponential function'''
         return a * np.exp(b*x)
 
-    def fit_exponential(self, x, y):
-        # Perform the curve fit
-        p0 = [100, -1]
-        params, _ = curve_fit(self.exponential, x, y, p0=p0)
-
-        # Extract the fitted parameters
-        a_fit, b_fit = params
+    def fit_exponential(self, x: np.array, y: np.array) -> tuple:
+        '''functions fits an exponential function to x and y data and yields
+        fitted parameters'''
+        p0 = [100, -1]  # initial guess
+        params, _ = curve_fit(self.exponential, x, y, p0=p0)  # curve fitting
+        a_fit, b_fit = params  # Extract the fitted parameters
         return a_fit, b_fit
 
 
 class plotter(laboratory, utilities):
+    '''class with functions for data and result plotting'''
 
     def __init__(self):
         self.fsize = 8  # main font size for plots
@@ -352,6 +356,9 @@ class plotter(laboratory, utilities):
     def req_sample_mass_vs_dmax_plot(self, df: pd.DataFrame, savepath: str,
                                      annotate_all=False, annotate_some=None,
                                      close: bool = True) -> None:
+        '''plot shows results from Monte-Carlo simulation where the required
+        sample mass to achieve a certain KS error is scattered against the soil
+        d_max'''
         dmaxs = np.arange(200)
         req_ISO = [self.ISO_required_sample_mass(dmax)/1000 for dmax in dmaxs]
         req_ASTM = [self.ASTM_required_sample_mass(dmax)/1000 for dmax in dmaxs]
@@ -437,6 +444,9 @@ class plotter(laboratory, utilities):
     def req_sample_mass_vs_d90_plot(self, df, savepath: str,
                                     annotate_some=None,
                                     close: bool = True) -> None:
+        '''plot shows results from Monte-Carlo simulation where the required
+        sample mass to achieve a certain KS error is scattered against the soil
+        d90'''
         fig, ax = plt.subplots(figsize=(3.54331, 3))
 
         divider = make_axes_locatable(ax)
@@ -486,6 +496,8 @@ class plotter(laboratory, utilities):
 
     def exponents_plot(self, df: pd.DataFrame, savepath: str,
                        close: bool = True) -> None:
+        '''plot that shows the different error exponents in relation to
+        parameters like minimum required smaple mass, d90, and KS error'''
         # compute statistics
         results = {}
         for exp in np.arange(1, 2.6, step=0.1):
@@ -522,13 +534,15 @@ class plotter(laboratory, utilities):
 
         ax2.scatter(exponents, med_errors,  # label=r'$KS_{med}$',
                     color='black', alpha=0.7, s=12)
-        label = r'$KS_{{med}}={}*e^{{({}*\epsilon)}}$'.format(round(med_a, 2), round(med_b, 2))
+        label = r'$KS_{{med}}={}*e^{{({}*\epsilon)}}$'.format(round(med_a, 2),
+                                                              round(med_b, 2))
         ax2.plot(exponents,
                  self.exponential(np.array(exponents), med_a, med_b),
                  label=label, color='black')
         ax2.scatter(exponents, p95_errors,  # label=r'$KS_{p95}$',
                     color='black', alpha=0.7, s=12)
-        label = r'$KS_{{p95}}={}*e^{{({}*\epsilon)}}$'.format(round(p95_a, 2), round(p95_b, 2))
+        label = r'$KS_{{p95}}={}*e^{{({}*\epsilon)}}$'.format(round(p95_a, 2),
+                                                              round(p95_b, 2))
         ax2.plot(exponents,
                  self.exponential(np.array(exponents), p95_a, p95_b),
                  label=label, color='black', ls='--')
@@ -582,21 +596,31 @@ class plotter(laboratory, utilities):
 
     def real_sieve_curves_plot(self, savepath: str,
                                close: bool = True) -> None:
+        '''function that plots the real laboratory sieve tests based on an
+        excel file'''
         fp = r'../laboratory/LabResults.xlsx'
-        df = pd.read_excel(fp, header=2, nrows=13, usecols=list(range(1, 9)))
+        df = pd.read_excel(fp, header=2, nrows=13, usecols=list(range(1, 12)))
         self.headers = list(df.columns)
 
         fig, ax = self.make_sieve_plot()
-
-        ax.plot(df['Sieve size Ø [mm]'], df['Soil C (ISO)'],
-                lw=3, color='C1', label='Soil C (ISO), 50 kg')
-        ax.plot(df['Sieve size Ø [mm]'], df['Soil C'],
-                lw=1.5, color='C1', alpha=0.5, label='Soil C, 20 kg')
 
         ax.plot(df['Sieve size Ø [mm]'], df['Soil A (ISO)'],
                 lw=3, color='C0', label='Soil A (ISO), 200 g')
         ax.plot(df['Sieve size Ø [mm]'], df['Soil A (5g)'],
                 lw=1.5, color='C0', alpha=0.5, label='Soil A, 5 g')
+
+        ax.plot(df['Sieve size Ø [mm]'], df['Soil B (ISO)'],
+                lw=3, color='C1', label='Soil B (ISO), 9 kg')
+        ax.plot(df['Sieve size Ø [mm]'], df['Soil B (1000g)'],
+                lw=1.5, color='C1', alpha=0.5, label='Soil B, 1 kg')
+        ax.plot(df['Sieve size Ø [mm]'], df['Soil B (300g)'],
+                lw=1.5, color='C1', ls='--', alpha=0.5, label='Soil B, 0.3 kg')
+
+        ax.plot(df['Sieve size Ø [mm]'], df['Soil C (ISO)'],
+                lw=3, color='C2', label='Soil C (ISO), 50 kg')
+        ax.plot(df['Sieve size Ø [mm]'], df['Soil C'],
+                lw=1.5, color='C2', alpha=0.5, label='Soil C, 20 kg')
+
         ax.legend(loc='upper left')
 
         plt.tight_layout()
@@ -606,8 +630,11 @@ class plotter(laboratory, utilities):
 
     def real_sieve_curves_scatter(self, savepath: str,
                                   close: bool = True) -> None:
+        '''function that creates a scatter plot that scatters Cc and Cu from
+        ISO sample masses against smaller sample masses'''
         fp = r'../laboratory/LabResults.xlsx'
-        df = pd.read_excel(fp, skiprows=20, nrows=2, usecols=list(range(1, 9)))
+        df = pd.read_excel(fp, skiprows=20, nrows=2,
+                           usecols=list(range(1, 12)))
         self.headers[0] = 'parameter'
         df.columns = self.headers
         df.set_index('parameter', inplace=True)
@@ -631,6 +658,13 @@ class plotter(laboratory, utilities):
         ax1.scatter(df['Soil A (ISO)'].loc['Cc'],
                     df['Soil A (5g)'].loc['Cc'],
                     label='Soil A (5g)', s=ms, marker='o', color='C3')
+
+        ax1.scatter(df['Soil B (ISO)'].loc['Cc'],
+                    df['Soil B (1000g)'].loc['Cc'],
+                    label='Soil B (1 kg)', s=ms, marker='v', color='C0')
+        ax1.scatter(df['Soil B (ISO)'].loc['Cc'],
+                    df['Soil B (300g)'].loc['Cc'],
+                    label='Soil A (0.3 kg)', s=ms, marker='v', color='C1')
 
         ax1.scatter(df['Soil C (ISO)'].loc['Cc'], df['Soil C'].loc['Cc'],
                     label='Soil C (20kg)', s=ms, marker='P', color='C0')
@@ -664,6 +698,13 @@ class plotter(laboratory, utilities):
         ax2.scatter(df['Soil A (ISO)'].loc['Cu'],
                     df['Soil A (5g)'].loc['Cu'],
                     label='Soil A (5g)', s=ms, marker='o', color='C3')
+
+        ax2.scatter(df['Soil B (ISO)'].loc['Cu'],
+                    df['Soil B (1000g)'].loc['Cu'],
+                    label='Soil B (1 kg)', s=ms, marker='v', color='C0')
+        ax2.scatter(df['Soil B (ISO)'].loc['Cu'],
+                    df['Soil B (300g)'].loc['Cu'],
+                    label='Soil A (0.3 kg)', s=ms, marker='v', color='C1')
 
         ax2.scatter(df['Soil C (ISO)'].loc['Cu'], df['Soil C'].loc['Cu'],
                     label='Soil C (20kg)', s=ms, marker='P', color='C0')
