@@ -10,6 +10,7 @@ Libraries:
 Author: Georg H. Erharter (georg.erharter@ngi.no)
 """
 
+# importing libraries
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
@@ -104,12 +105,43 @@ class laboratory(statistics):
                 sample_diameters = grain_diameters[sample_ids]
         return sample_ids, sample_masses, sample_diameters
 
+    def make_grains_from_distribution(self, DENSITY: float,  # [g/cm3]
+                                      TOT_MASS: float,  # [kg]
+                                      distribution: str) -> list:
+        '''Function generates a new soil sample, based on a standard
+        statistical distribution.'''
+
+        diameters = []  # [mm]
+        tot_mass = 0  # [kg]
+
+        match distribution:
+            case 'normal':
+                while tot_mass < TOT_MASS:
+                    diameter = np.random.normal(loc=32.5, scale=15,
+                                                size=2)  # [mm]
+                    diameter = np.where(diameter < 0, diameter * -1, diameter)
+                    volume = ((4/3)*np.pi*((diameter/2)**3)) / 1000  # [cm3]
+                    tot_mass += volume.sum() * DENSITY / 1000  # [kg]
+                    diameters.append(diameter)
+            case _:
+                raise ValueError(f'{distribution} not implemented')
+
+        volumes = (4/3)*np.pi*(np.array(diameters)/2)**3  # [mm3]
+        volumes = volumes / 1000  # [cm3]
+        masses = volumes * DENSITY / 1000  # [kg]
+        ids = np.arange(len(diameters))
+        return diameters, masses, ids
+
     def make_grains(self, DENSITY: float, TOT_MASS: float,
                     min_d: float = 1, max_d: float = 200,
                     verbose: bool = False) -> list:
-        '''function generates a new soil sample'''
+        '''Function generates a new soil sample, based on generation process
+        described in the paper that mimics real soils that are typically
+        composed of multiple soil fractions due to their geological history.'''
 
-        def make_beta(lower, upper, n):
+        def make_beta(lower: float, upper: float, n: int) -> np.array:
+            '''function generates an array of grain sizes based on a beta
+            distribution and scaled between lower and upper [mm]'''
             x = np.random.beta(a=np.random.uniform(1, 5),
                                b=np.random.uniform(1, 5), size=n)
             x = x*(upper-lower)
@@ -119,10 +151,11 @@ class laboratory(statistics):
         fractions = fractions / sum(fractions)
         fractions = np.sort(fractions)
 
-        diameters = []
-        tot_mass = 0
+        diameters = []  # [mm]
+        tot_mass = 0  # [kg]
 
         for i in range(len(fractions)):
+            # lower, upper = size boundaries of soil fractions in [mm]
             lower, upper = sorted(np.exp(np.random.uniform(np.log(min_d),
                                                            np.log(max_d), 2)))
             while tot_mass < sum(fractions[:i+1]) * TOT_MASS:
@@ -848,6 +881,8 @@ class plotter(laboratory, utilities):
         ax.plot([20, 20], [1.06, 1.11], color="grey", linewidth=0.5,
                 transform=trans, clip_on=False)
 
+        plt.tight_layout()
+
         return fig, ax
 
     def sieve_curves_plot(self, SIEVE_SIZES: list, fractions_true: list,
@@ -857,8 +892,7 @@ class plotter(laboratory, utilities):
                           req_sample_masses: list = None,
                           ks_distances: list = None,
                           close: bool = True) -> None:
-        '''plot sieve curves of underlying soil distribution and taken
-        samples'''
+        '''plot sieve curves of soil distributions and taken samples'''
         cmap = matplotlib.colormaps['inferno']
 
         fig, ax = self.make_sieve_plot()
@@ -1034,22 +1068,28 @@ if __name__ == '__main__':
 
     lab, pltr = laboratory(), plotter()
 
-    # make plot of random sieve curves to demonstrate sampler
-    fractions_trues, max_diameters = [], []
+    diameters, masses, ids = lab.make_grains_from_distribution(
+        DENSITY, TOT_MASS, distribution='normal')
+    fractions_true = lab.sieve(ids, diameters, masses, SIEVE_SIZES)
 
-    for i in range(400):
-        grain_diameters, grain_masses, grain_ids = lab.make_grains(
-            DENSITY, TOT_MASS=TOT_MASS)
-        Dmax = grain_diameters.max()
-        print(i, grain_masses.sum())
-        fractions_true = lab.sieve(grain_ids, grain_diameters, grain_masses,
-                                   SIEVE_SIZES)
-        fractions_trues.append(list(fractions_true.values()))
-        max_diameters.append(Dmax)
-
-    pltr.sieve_curves_plot(list(fractions_true.keys()), fractions_trues,
-                           savepath=fr'../figures/sieve_samples_new.jpg',
+    pltr.sieve_curves_plot(SIEVE_SIZES, list(fractions_true.values()),
                            close=False)
 
-    fig, ax = plt.subplots()
-    ax.hist(max_diameters, color='grey', edgecolor='black', bins=30)
+    # pltr.make_sieve_plot()
+
+    # # make plot of random sieve curves to demonstrate sampler
+    # fractions_trues, max_diameters = [], []
+
+    # for i in range(400):
+    #     grain_diameters, grain_masses, grain_ids = lab.make_grains(
+    #         DENSITY, TOT_MASS=TOT_MASS)
+    #     Dmax = grain_diameters.max()
+    #     print(i, grain_masses.sum())
+    #     fractions_true = lab.sieve(grain_ids, grain_diameters, grain_masses,
+    #                                SIEVE_SIZES)
+    #     fractions_trues.append(list(fractions_true.values()))
+    #     max_diameters.append(Dmax)
+
+    # pltr.sieve_curves_plot(list(fractions_true.keys()), fractions_trues,
+    #                        savepath=fr'../figures/sieve_samples_new.jpg',
+    #                        close=False)

@@ -6,9 +6,10 @@ relationships between parameters.
 Author: Georg H. Erharter (georg.erharter@ngi.no)
 """
 
+# importing libraries
 import numpy as np
 import pandas as pd
-
+# importing custom libraries from file "X_library.py"
 from X_library import utilities, laboratory, plotter
 
 
