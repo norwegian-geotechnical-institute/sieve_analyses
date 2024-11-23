@@ -80,7 +80,7 @@ pltr.comparison_plot(df, savepath=r'../figures/comparison.jpg')
 # plot showing exemplary sieve curves
 sieve_cols = [c for c in df.columns if 'mm sieve [m%]' in c]
 sieve_sizes = [eval(s.split(' ')[0]) for s in sieve_cols]
-fractions_trues = [list(df[sieve_cols].iloc[i].values) for i in range(10)]
+fractions_trues = [list(df[sieve_cols].iloc[i].values) for i in range(90)]
 
 pltr.sieve_curves_plot(SIEVE_SIZES=sieve_sizes, fractions_true=fractions_trues,
                        color=df['S0'],

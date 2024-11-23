@@ -22,7 +22,7 @@ from X_library import laboratory, statistics, plotter, utilities
 DENSITY = 2.65  # grain density [g/cm3]
 MIN_D, MAX_D = 1, 200  # [mm] min & max particle sizes of simulation
 N_MESH_SIZES = 50  # number of mesh sizes between MIN_D, MAX_D
-N_SIMULATIONS = 25  # number of new simulations to do
+N_SIMULATIONS = 100  # number of new simulations to do
 STUDY_NAME = '2024_11_22'  # study to work with or to create
 TOT_MASS = 1800  # [kg]
 
