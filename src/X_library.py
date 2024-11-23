@@ -185,7 +185,7 @@ class laboratory(statistics):
         ids = np.arange(len(diameters))
         return diameters, masses, ids
 
-    def sieve(self, ids: np.array, diameters: np.array, masses: np.array,
+    def sieve(self, diameters: np.array, masses: np.array,
               sieve_sizes: list) -> dict:
         '''make a virtual sieve analysis of the sample'''
         tot_mass = masses.sum()
@@ -200,12 +200,33 @@ class laboratory(statistics):
             fractions.append(fraction)
         return dict(zip(sieve_sizes, fractions))
 
-    def calc_grading_characteristics(self, fractions_true: list,
-                                     SIEVE_SIZES: list) -> list:
+    def calc_grading_characteristics_legacy(self, fractions_true: list,
+                                            SIEVE_SIZES: list) -> list:
         '''function computes different metrics about the grading of a soil'''
         d_s = [10, 12, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90]
         d_keys = [f'd{d}' for d in d_s]
         d_vals = np.interp(d_s, fractions_true, SIEVE_SIZES)
+        ds = dict(zip(d_keys, d_vals))
+
+        Cu = ds['d60']/ds['d10']
+        Cc = (ds['d30']**2)/(ds['d60']*ds['d10'])
+        S0 = np.sqrt(ds['d75']/ds['d25'])
+        return ds, Cu, Cc, S0
+
+    def calc_grading_characteristics(self, grain_diameters: np.array,
+                                     grain_masses: np.array) -> list:
+        '''function computes different metrics about the grading of a soil
+        based on the real cumulative density curve of the soil mass - not based
+        on the sieve curve, as this introduces error esp. in large grain due to
+        mesh widths sizes'''
+        d_s = [10, 12, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90]
+        d_keys = [f'd{d}' for d in d_s]
+
+        id_sorted = np.argsort(grain_diameters)
+        sorted_grain_diameters = grain_diameters[id_sorted]
+        cumulative_relative_grain_masses = np.cumsum(grain_masses[id_sorted])/sum(grain_masses)*100
+        d_vals = np.interp(d_s, cumulative_relative_grain_masses,
+                           sorted_grain_diameters)
         ds = dict(zip(d_keys, d_vals))
 
         Cu = ds['d60']/ds['d10']
@@ -262,8 +283,8 @@ class laboratory(statistics):
                 sample_ids, sample_masses, sample_diameter = self.get_sample(
                     mass, total_mass, grain_masses, grain_diameters,
                     strategy='random choice')
-                fractions = self.sieve(sample_ids, sample_diameter,
-                                       sample_masses, SIEVE_SIZES)
+                fractions = self.sieve(sample_diameter, sample_masses,
+                                       SIEVE_SIZES)
                 masses_temp.append(sample_masses.sum())
                 ks_s_temp.append(self.ks_statistic(
                     list(fractions_true.values()), list(fractions.values())))
@@ -765,8 +786,8 @@ class plotter(laboratory, utilities):
 
     def distances_plot(self, req_sample_masses: list, ks_distances: list,
                        savepath: str, close: bool = True) -> None:
-        '''plot an underlying soil distribution vs. distributions of different
-        samples with reduced mass and also their kolmogorov smirnov distance'''
+        '''plot a soil distribution vs. distributions of different samples with
+        reduced mass and also their kolmogorov smirnov distance'''
         fig, ax = plt.subplots(figsize=(6, 6), nrows=1, ncols=1)
 
         ax.scatter(req_sample_masses, ks_distances, color='C0',
@@ -925,142 +946,6 @@ class plotter(laboratory, utilities):
             plt.close()
 
 
-class sample_preview:
-    '''class with functions to make a preview of a soil sample - very
-    experimental, use not recommended'''
-
-    def identify_overlapping(self, grain_xs, grain_ys, grain_rs):
-        # check for overlapping grains
-        dx = grain_xs - grain_xs[:, np.newaxis]
-        dy = grain_ys - grain_ys[:, np.newaxis]
-        distances = np.sqrt(dx**2 + dy**2)
-        radii_sum = grain_rs + grain_rs[:, np.newaxis]
-        overlapping = distances < radii_sum
-        # remove self overlapping
-        np.fill_diagonal(overlapping, False)
-        # get indices
-        return np.where(np.any(overlapping, axis=1) == True)[0]
-
-    def shake(self, grain_xs, grain_ys, grain_rs, BOX_SIZE):
-        delta_x = np.random.normal(loc=0, scale=grain_rs/10,
-                                   size=len(grain_xs))
-        delta_y = np.random.normal(loc=0, scale=grain_rs/10,
-                                   size=len(grain_ys))
-        grain_xs += delta_x
-        grain_ys += delta_y
-        grain_xs = np.where(grain_xs < 0, grain_xs*-1, grain_xs)
-        grain_xs = np.where(grain_xs > BOX_SIZE,
-                            BOX_SIZE + (BOX_SIZE - grain_xs), grain_xs)
-        grain_ys = np.where(grain_ys < 0, grain_ys*-1, grain_ys)
-        grain_ys = np.where(grain_ys > BOX_SIZE,
-                            BOX_SIZE + (BOX_SIZE - grain_ys), grain_ys)
-        return grain_xs, grain_ys
-
-    def adjust_grain(self, overlap_ids, grain_xs, grain_ys, grain_rs,
-                     BOX_SIZE):
-        for overlap_id in overlap_ids:
-            overlapping = True
-            # update position until it fits
-            counter = 0
-            while overlapping is True:
-                counter += 1
-                if counter > 40_000:  # safety to avoid infinite loops
-                    break
-                # choose new position from grain randomly
-                delta_x = np.random.normal(loc=0, scale=grain_rs[overlap_id])
-                delta_y = np.random.normal(loc=0, scale=grain_rs[overlap_id])
-                new_x = grain_xs[overlap_id] + delta_x
-                new_y = grain_ys[overlap_id] + delta_y
-                if new_x > 0 and new_x < BOX_SIZE:
-                    grain_xs[overlap_id] = new_x
-                if new_y > 0 and new_y < BOX_SIZE:
-                    grain_ys[overlap_id] = new_y
-                # grain_xs[overlap_id] = np.random.uniform(0, BOX_SIZE)
-                # grain_ys[overlap_id] = np.random.uniform(0, BOX_SIZE)
-                # check if new position overlaps or not
-                dx_grain = grain_xs[overlap_id] - grain_xs
-                dy_grain = grain_ys[overlap_id] - grain_ys
-                distances_grain = np.sqrt(dx_grain**2 + dy_grain**2) - grain_rs
-                overlaps_grain = distances_grain < grain_rs[overlap_id]
-                overlaps_grain[overlap_id] = False
-                if True in overlaps_grain:
-                    overlapping = True
-                else:
-                    overlapping = False
-
-        return grain_xs, grain_ys
-
-    def plot_grains(self, grain_diameters, BOX_SIZE, SEED, Cu, S0, mass,
-                    savepath: str, close: bool = True) -> None:
-        # preprocessing of grains and initialize positions
-        grain_diameters = grain_diameters / 1000
-        grain_rs = grain_diameters / 2
-
-        if (grain_rs**2 * np.pi).sum() > BOX_SIZE**2 * 0.66:
-            raise ValueError('too small plotting area')
-
-        grain_xs = np.random.uniform(0, BOX_SIZE, len(grain_diameters))
-        grain_ys = np.random.uniform(0, BOX_SIZE, len(grain_diameters))
-        # identify overlapping ones
-        overlapping_indexes = self.identify_overlapping(grain_xs, grain_ys,
-                                                        grain_rs)
-        n_overlapping = len(overlapping_indexes)
-        print(f'plotting grains; there are {n_overlapping} overlapping grains')
-
-        n_overlappings = []  # track how many grains still overlap
-
-        # adjust overlapping grains
-        while n_overlapping > 0:
-            # number of smallest overlapping grains to relocate
-            if len(n_overlappings) > 20 and np.mean(np.diff(n_overlappings[-10:])) > -1:
-                n_smallest_grains = 1
-            else:
-                n_smallest_grains = int(n_overlapping * 0.1)
-                if n_smallest_grains < 1: n_smallest_grains = 1
-
-            print(n_overlapping, n_smallest_grains,
-                  np.mean(np.diff(n_overlappings[-10:])))
-            id_smallest = np.argsort(grain_diameters[overlapping_indexes])[:n_smallest_grains]
-            # id_smallest = np.argmin(grain_diameters[overlapping_indexes])
-            id_smallest = overlapping_indexes[id_smallest]
-            grain_xs, grain_ys = self.adjust_grain(id_smallest, grain_xs,
-                                                   grain_ys, grain_rs,
-                                                   BOX_SIZE)
-
-            overlapping_indexes = self.identify_overlapping(grain_xs,
-                                                            grain_ys,
-                                                            grain_rs)
-            n_overlapping = len(overlapping_indexes)
-            n_overlappings.append(n_overlapping)
-
-            if np.mean(np.diff(n_overlappings[-5:])) >= 0:
-                grain_xs, grain_ys = self.shake(grain_xs, grain_ys,
-                                                grain_rs, BOX_SIZE)
-                print('shaked')
-        print('plotting')
-        # plot grains
-        fig, ax = plt.subplots(figsize=(9, 9))
-        for i in range(len(grain_xs)):
-            if i in overlapping_indexes:
-                circle = plt.Circle((grain_xs[i], grain_ys[i]), grain_rs[i],
-                                    facecolor='none', edgecolor='red')
-            else:
-                circle = plt.Circle((grain_xs[i], grain_ys[i]), grain_rs[i],
-                                    color='black', linewidth=0)
-            ax.add_patch(circle)
-        ax.set_xlim(0, BOX_SIZE)
-        ax.set_ylim(0, BOX_SIZE)
-        ax.get_xaxis().set_ticks([])
-        ax.get_yaxis().set_ticks([])
-        ax.set_title(f'seed {SEED}; Cu: {round(Cu, 2)}, S0: {round(S0, 2)}, mass: {mass} kg')
-        ax.set_xlabel(f'{BOX_SIZE} meters')
-
-        plt.tight_layout()
-        plt.savefig(savepath, dpi=600)
-        if close is True:
-            plt.close()
-
-
 if __name__ == '__main__':
     DENSITY = 2.65
     TOT_MASS = 60
@@ -1074,22 +959,3 @@ if __name__ == '__main__':
 
     pltr.sieve_curves_plot(SIEVE_SIZES, list(fractions_true.values()),
                            close=False)
-
-    # pltr.make_sieve_plot()
-
-    # # make plot of random sieve curves to demonstrate sampler
-    # fractions_trues, max_diameters = [], []
-
-    # for i in range(400):
-    #     grain_diameters, grain_masses, grain_ids = lab.make_grains(
-    #         DENSITY, TOT_MASS=TOT_MASS)
-    #     Dmax = grain_diameters.max()
-    #     print(i, grain_masses.sum())
-    #     fractions_true = lab.sieve(grain_ids, grain_diameters, grain_masses,
-    #                                SIEVE_SIZES)
-    #     fractions_trues.append(list(fractions_true.values()))
-    #     max_diameters.append(Dmax)
-
-    # pltr.sieve_curves_plot(list(fractions_true.keys()), fractions_trues,
-    #                        savepath=fr'../figures/sieve_samples_new.jpg',
-    #                        close=False)

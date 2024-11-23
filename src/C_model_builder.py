@@ -17,7 +17,7 @@ from X_library import utilities, laboratory, plotter
 # fixed values and constant variables
 ###############################
 
-STUDY_NAME = '2024_07_07'  # study to work with or to create
+STUDY_NAME = '2024_11_22'  # study to work with or to create
 
 ###############################
 # data loading, instantiations and some data processing
@@ -41,7 +41,7 @@ print(f"ASTM mass = {round(df['comparison ASTM'].max(), 2)} larger at max")
 # move ID column to the front
 ID_column = df.pop('ID')
 df.insert(0, 'ID', ID_column)
-df.to_excel(r'../simulations/MonteCarloSimulations.xlsx', index=False)
+df.to_excel(fr'../simulations/MonteCarloSimulations_{STUDY_NAME}.xlsx', index=False)
 
 ###############################
 # plotting
@@ -55,18 +55,19 @@ pltr.error_violin_plot(df, r'../figures/error_violin.jpg')
 
 # scatterplot showing required sample mass against max diameter
 pltr.req_sample_mass_vs_dmax_plot(df, annotate_all=False,
-                                  annotate_some=[310, 210, 94, 52],
+                                  # annotate_some=[310, 210, 94, 52],
                                   close=True,
                                   savepath=r'../figures/req_mass_dmax.jpg')
 
 # plot individual simplified sieve curves for combined plots
 # 310 ... max req. mass, 210 ... max dmax & max req. mass, 94... min dmax
 # 52 ... center
-pltr.simple_sieve_plot(df, ids=[310, 210, 94, 52], close=True,
-                       savepath=r'../figures/req_mass_dmax_samples.jpg')
+# pltr.simple_sieve_plot(df, ids=[310, 210, 94, 52], close=True,
+#                        savepath=r'../figures/req_mass_dmax_samples.jpg')
 
 # plot showing required sample mass against d90
-pltr.req_sample_mass_vs_d90_plot(df, annotate_some=[310, 94, 210, 52],
+pltr.req_sample_mass_vs_d90_plot(df,
+                                 # annotate_some=[310, 94, 210, 52],
                                  savepath=r'../figures/req_mass_d90.jpg')
 
 # plot showing new m_min functions with different epsilon
@@ -79,7 +80,7 @@ pltr.comparison_plot(df, savepath=r'../figures/comparison.jpg')
 # plot showing exemplary sieve curves
 sieve_cols = [c for c in df.columns if 'mm sieve [m%]' in c]
 sieve_sizes = [eval(s.split(' ')[0]) for s in sieve_cols]
-fractions_trues = [list(df[sieve_cols].iloc[i].values) for i in range(100)]
+fractions_trues = [list(df[sieve_cols].iloc[i].values) for i in range(10)]
 
 pltr.sieve_curves_plot(SIEVE_SIZES=sieve_sizes, fractions_true=fractions_trues,
                        color=df['S0'],

@@ -18,11 +18,12 @@ from X_library import laboratory, statistics, plotter, utilities
 # fixed values and constant variables
 ###############################
 
-# number of grains of underlying soil distribution -> impacts computation
+# number of grains of soil distribution -> impacts computation
 DENSITY = 2.65  # grain density [g/cm3]
 MIN_D, MAX_D = 1, 200  # [mm] min & max particle sizes of simulation
-N_SIMULATIONS = 1  # number of new simulations to do
-STUDY_NAME = '2024_07_07'  # study to work with or to create
+N_MESH_SIZES = 50  # number of mesh sizes between MIN_D, MAX_D
+N_SIMULATIONS = 25  # number of new simulations to do
+STUDY_NAME = '2024_11_22'  # study to work with or to create
 TOT_MASS = 1800  # [kg]
 
 ###############################
@@ -34,7 +35,7 @@ print(STUDY_NAME)
 lab, stat, pltr, utils = laboratory(), statistics(), plotter(), utilities()
 
 # create virtual mesh sizes
-sieve_sizes = np.exp(np.linspace(np.log(MIN_D), np.log(MAX_D), 30))
+sieve_sizes = np.exp(np.linspace(np.log(MIN_D), np.log(MAX_D), N_MESH_SIZES))
 
 exponents = np.arange(1, 2.6, step=0.1)
 standards = ['ISO', 'ASTM', 'const'] + [f'new {round(e, 1)}' for e in exponents]
@@ -43,7 +44,7 @@ ks_labels = [f'{s} ks [%]' for s in standards]
 
 # empty lists to collect results of simulations
 d_s, Cu_s, Cc_s, S0_s, soil_classes = [], [], [], [], []
-max_diameters, total_masses = [], []
+min_diameters, max_diameters, total_masses = [], [], []
 req_mass_p95s, fractions_trues = [], []
 req_masses, ks_s = [], []
 
@@ -54,13 +55,13 @@ for i in tqdm(range(N_SIMULATIONS)):
         DENSITY, TOT_MASS, min_d=MIN_D, max_d=MAX_D)
     # get maximum grain diameter of soil [mm] and total mass [kg]
     max_diameter = grain_diameters.max()
+    min_diameter = grain_diameters.min()
     total_mass = grain_masses.sum()
     # make sieve analysis of underlying soil distribution
-    fractions_true = lab.sieve(grain_ids, grain_diameters, grain_masses,
-                               sieve_sizes)
+    fractions_true = lab.sieve(grain_diameters, grain_masses, sieve_sizes)
     # calculate geometrical properites of underlying soil distribution
-    ds, Cu, Cc, S0 = lab.calc_grading_characteristics(
-        list(fractions_true.values()), sieve_sizes)
+    ds, Cu, Cc, S0 = lab.calc_grading_characteristics(grain_diameters,
+                                                      grain_masses)
     # classify underlying soil distribution acc to USCS
     soil_class = lab.USCS_classification(ds['d12'], ds['d50'], Cu, Cc)
 
@@ -89,10 +90,9 @@ for i in tqdm(range(N_SIMULATIONS)):
         for i, req_sample_mass in enumerate(req_sample_masses):
             # get sample out of underlying distribution acc to sample_mass
             sample_ids, sample_masses, sample_diameter = lab.get_sample(
-                req_sample_mass, total_mass, grain_masses,
-                grain_diameters)
-            sieved_sample = lab.sieve(sample_ids, sample_diameter,
-                                      sample_masses, sieve_sizes)
+                req_sample_mass, total_mass, grain_masses, grain_diameters)
+            sieved_sample = lab.sieve(sample_diameter, sample_masses,
+                                      sieve_sizes)
             # compute kolmogorov smirnov distance between sample and real soil
             ks_s_temp.append(stat.ks_statistic(list(fractions_true.values()),
                                                list(sieved_sample.values())))
@@ -102,6 +102,7 @@ for i in tqdm(range(N_SIMULATIONS)):
         Cu_s.append(Cu)
         Cc_s.append(Cc)
         S0_s.append(S0)
+        min_diameters.append(min_diameter)
         max_diameters.append(max_diameter)
         total_masses.append(total_mass)
         soil_classes.append(soil_class)
@@ -118,6 +119,7 @@ df_new = pd.DataFrame({'Cu': Cu_s,
                        'Cc': Cc_s,
                        'S0': S0_s,
                        'USCS soil classes': soil_classes,
+                       'min diameter [mm]': min_diameters,
                        'max diameter [mm]': max_diameters,
                        'total masses [kg]': total_masses,
                        'req. mass ks_p95 <= 10 [kg]': req_mass_p95s

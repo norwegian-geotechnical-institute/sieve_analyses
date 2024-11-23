@@ -19,6 +19,7 @@ from X_library import laboratory, plotter, statistics
 # constant values and hyperparameters
 DENSITY = 2.65  # grain density [g/cm3]
 MIN_D, MAX_D = 1, 200  # [mm] min & max particle sizes of simulation
+N_MESH_SIZES = 50  # number of mesh sizes between MIN_D, MAX_D
 # fractions of the ISO required sample mass that are analyzed
 FRACTIONS = [1, 0.75, 0.5, 0.25, 0.1, 0.05, 0.01]
 SEED = 6  # random seed for reproducibility
@@ -33,7 +34,7 @@ lab, pltr, stat = laboratory(), plotter(), statistics()
 np.random.seed(SEED)  # fix seed for reproducibility
 
 # create virtual mesh sizes
-sieve_sizes = np.exp(np.linspace(np.log(MIN_D), np.log(MAX_D), 30))
+sieve_sizes = np.exp(np.linspace(np.log(MIN_D), np.log(MAX_D), N_MESH_SIZES))
 
 # initialize ground truth sample
 grain_diameters, grain_masses, grain_ids = lab.make_grains(
@@ -49,11 +50,10 @@ print(f'required mass: {round(standard_sample_mass, 3)} kg')
 if standard_sample_mass > total_mass:
     raise ValueError('required sample mass larger than total mass')
 
-fractions_true = lab.sieve(grain_ids, grain_diameters, grain_masses,
-                           sieve_sizes)
+fractions_true = lab.sieve(grain_diameters, grain_masses, sieve_sizes)
 # calculate grading characteristics of soil distribution
-ds, Cu, Cc, S0 = lab.calc_grading_characteristics(
-    list(fractions_true.values()), sieve_sizes)
+ds, Cu, Cc, S0 = lab.calc_grading_characteristics(grain_diameters,
+                                                  grain_masses)
 
 req_sample_masses = []
 ks_distances = []
@@ -66,8 +66,7 @@ for sample_fraction in FRACTIONS:
     req_sample_mass = standard_sample_mass*sample_fraction
     sample_ids, sample_masses, sample_diameter = lab.get_sample(
         req_sample_mass, total_mass, grain_masses, grain_diameters)
-    sieved_sample = lab.sieve(sample_ids, sample_diameter, sample_masses,
-                              sieve_sizes)
+    sieved_sample = lab.sieve(sample_diameter, sample_masses, sieve_sizes)
     # calculate distribution - distribution distance metrics
     ks = stat.ks_statistic(list(fractions_true.values()),
                            list(sieved_sample.values()))
@@ -90,13 +89,3 @@ pltr.sieve_curves_plot(SIEVE_SIZES=sieve_sizes,
                        sieved_samples=sieved_samples,
                        req_sample_masses=req_sample_masses,
                        ks_distances=ks_distances)
-
-# # make sample preview plot ... very experimental still
-# mass = 1.5
-# plot_sample = lab.get_sample(mass, total_mass, grain_masses,
-#                              grain_diameters)[2]
-# if len(plot_sample) < 30_000:
-#     pltr.plot_grains(plot_sample, 0.5, SEED, Cu, S0, mass,
-#                      savepath=fr'../figures/{SEED}_sample.jpg')
-# else:
-#     print('too many grains', len(plot_sample))
