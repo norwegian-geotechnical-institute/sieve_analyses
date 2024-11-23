@@ -1,5 +1,8 @@
 # automatically generated folder
 src/__pycache__/
 
+# folder containing analyses for the samples for the survey about visual estimation of particle sizes -> will be published after survey
+samples/analyses
+
 # folder containing experimental material from https://github.com/zsylvester/segmenteverygrain 
 segmenteverygrain
