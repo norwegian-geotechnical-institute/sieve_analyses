@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" width="212.6pt" height="141.8pt" viewBox="0 0 212.64 141.84" xmlns="http://www.w3.org/2000/svg">
+  <defs />
+  <g id="grey">
+    <path d="M42.113956,119.50911 L42.113956,6.0371118" stroke="#BEBEBE" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M65.696495,119.50911 L65.696495,6.0371118" stroke="#BEBEBE" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M96.77981,119.50911 L96.77981,6.0371118" stroke="#BEBEBE" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M126.296394,119.50911 L126.296394,6.0371118" stroke="#BEBEBE" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M159.07552,119.50911 L159.07552,6.0371118" stroke="#BEBEBE" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M196.45294,119.50911 L196.45294,6.0371118" stroke="#BEBEBE" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M207.79375,6.0371118 L196.45294,6.0371118 L42.113956,6.0371118 L30.773159,6.0371118" stroke="#BEBEBE" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M207.79375,17.384312 L196.45294,17.384312 L42.113956,17.384312 L30.773159,17.384312" stroke="#BEBEBE" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M207.79375,28.731512 L196.45294,28.731512 L42.113956,28.731512 L30.773159,28.731512" stroke="#BEBEBE" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M207.79375,40.078712 L196.45294,40.078712 L42.113956,40.078712 L30.773159,40.078712" stroke="#BEBEBE" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M207.79375,51.42591 L196.45294,51.42591 L42.113956,51.42591 L30.773159,51.42591" stroke="#BEBEBE" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M207.79375,62.77311 L196.45294,62.77311 L42.113956,62.77311 L30.773159,62.77311" stroke="#BEBEBE" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M207.79375,74.12031 L196.45294,74.12031 L42.113956,74.12031 L30.773159,74.12031" stroke="#BEBEBE" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M207.79375,85.46751 L196.45294,85.46751 L42.113956,85.46751 L30.773159,85.46751" stroke="#BEBEBE" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M207.79375,96.81471 L196.45294,96.81471 L42.113956,96.81471 L30.773159,96.81471" stroke="#BEBEBE" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M207.79375,108.16191 L196.45294,108.16191 L42.113956,108.16191 L30.773159,108.16191" stroke="#BEBEBE" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+  </g>
+  <g id="darkgrey">
+    <path d="M65.696495,108.16191 L65.696495,110.99871" stroke="#696969" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M126.296394,40.078712 L126.296394,62.77311" stroke="#696969" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M159.07552,11.7107115 L159.07552,17.384312" stroke="#696969" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M96.77981,96.81471 L96.77981,102.48831" stroke="#696969" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+  </g>
+  <text x="34.16" y="108" font-family="Arial" fill="#696969" font-size="7.899">Δ</text>
+  <text x="39.43" y="108" font-family="Arial" fill="#696969" font-size="7.899"> </text>
+  <text x="41.62" y="108" font-family="Arial" fill="#696969" font-size="7.899">=</text>
+  <text x="46.24" y="108" font-family="Arial" fill="#696969" font-size="7.899"> </text>
+  <text x="48.43" y="108" font-family="Arial" fill="#696969" font-size="7.899">0</text>
+  <text x="52.81" y="108" font-family="Arial" fill="#696969" font-size="7.899">%</text>
+  <text x="65.7" y="118.1" font-family="Arial" fill="#696969" font-size="7.899">Δ</text>
+  <text x="70.97" y="118.1" font-family="Arial" fill="#696969" font-size="7.899"> </text>
+  <text x="73.15" y="118.1" font-family="Arial" fill="#696969" font-size="7.899">=</text>
+  <text x="77.78" y="118.1" font-family="Arial" fill="#696969" font-size="7.899"> </text>
+  <text x="79.96" y="118.1" font-family="Arial" fill="#696969" font-size="7.899">2</text>
+  <text x="84.34" y="118.1" font-family="Arial" fill="#696969" font-size="7.899">.</text>
+  <text x="86.53" y="118.1" font-family="Arial" fill="#696969" font-size="7.899">5</text>
+  <text x="90.91" y="118.1" font-family="Arial" fill="#696969" font-size="7.899">%</text>
+  <text x="126.3" y="69.87" font-family="Arial" fill="#696969" font-size="7.899">Δ</text>
+  <text x="131.6" y="69.87" font-family="Arial" fill="#696969" font-size="7.899"> </text>
+  <text x="133.8" y="69.87" font-family="Arial" fill="#696969" font-size="7.899">=</text>
+  <text x="138.4" y="69.87" font-family="Arial" fill="#696969" font-size="7.899"> </text>
+  <text x="140.6" y="69.87" font-family="Arial" fill="#696969" font-size="7.899">2</text>
+  <text x="144.9" y="69.87" font-family="Arial" fill="#696969" font-size="7.899">0</text>
+  <text x="149.3" y="69.87" font-family="Arial" fill="#696969" font-size="7.899">%</text>
+  <text x="159.1" y="24.48" font-family="Arial" fill="#696969" font-size="7.899">Δ</text>
+  <text x="164.3" y="24.48" font-family="Arial" fill="#696969" font-size="7.899"> </text>
+  <text x="166.5" y="24.48" font-family="Arial" fill="#696969" font-size="7.899">=</text>
+  <text x="171.2" y="24.48" font-family="Arial" fill="#696969" font-size="7.899"> </text>
+  <text x="173.3" y="24.48" font-family="Arial" fill="#696969" font-size="7.899">5</text>
+  <text x="177.7" y="24.48" font-family="Arial" fill="#696969" font-size="7.899">%</text>
+  <text x="185.7" y="15.17" font-family="Arial" fill="#696969" font-size="7.899">Δ</text>
+  <text x="190.9" y="15.17" font-family="Arial" fill="#696969" font-size="7.899"> </text>
+  <text x="193.1" y="15.17" font-family="Arial" fill="#696969" font-size="7.899">=</text>
+  <text x="197.8" y="15.17" font-family="Arial" fill="#696969" font-size="7.899"> </text>
+  <text x="199.9" y="15.17" font-family="Arial" fill="#696969" font-size="7.899">0</text>
+  <text x="204.3" y="15.17" font-family="Arial" fill="#696969" font-size="7.899">%</text>
+  <text x="96.78" y="109.6" font-family="Arial" fill="#696969" font-size="7.899">Δ</text>
+  <text x="102" y="109.6" font-family="Arial" fill="#696969" font-size="7.899"> </text>
+  <text x="104.2" y="109.6" font-family="Arial" fill="#696969" font-size="7.899">=</text>
+  <text x="108.9" y="109.6" font-family="Arial" fill="#696969" font-size="7.899"> </text>
+  <text x="111" y="109.6" font-family="Arial" fill="#696969" font-size="7.899">5</text>
+  <text x="115.4" y="109.6" font-family="Arial" fill="#696969" font-size="7.899">%</text>
+  <g id="Default">
+    <g id="Default::Layer_02">
+      <path d="M196.45294,6.0371118 L191.32957,7.592489" stroke="#000000" stroke-width="0.992126" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+      <path d="M185.90344,9.239778 L180.47731,10.887068" stroke="#000000" stroke-width="0.992126" stroke-linecap="butt" stroke-linejoin="round" fill="none" />
+      <path d="M175.05118,12.534357 L169.62503,14.181645" stroke="#000000" stroke-width="0.992126" stroke-linecap="butt" stroke-linejoin="round" fill="none" />
+      <path d="M164.1989,15.828935 L159.07552,17.384312 L156.42976,21.047848" stroke="#000000" stroke-width="0.992126" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+      <path d="M153.10867,25.646507 L149.7876,30.245167" stroke="#000000" stroke-width="0.992126" stroke-linecap="butt" stroke-linejoin="round" fill="none" />
+      <path d="M146.4665,34.843826 L143.14543,39.44249" stroke="#000000" stroke-width="0.992126" stroke-linecap="butt" stroke-linejoin="round" fill="none" />
+      <path d="M139.82434,44.04115 L136.50325,48.639812" stroke="#000000" stroke-width="0.992126" stroke-linecap="butt" stroke-linejoin="round" fill="none" />
+      <path d="M133.18217,53.23847 L129.86108,57.837128" stroke="#000000" stroke-width="0.992126" stroke-linecap="butt" stroke-linejoin="round" fill="none" />
+      <path d="M126.54,62.435795 L126.296394,62.77311 L123.16094,66.99193" stroke="#000000" stroke-width="0.992126" stroke-linecap="butt" stroke-linejoin="round" fill="none" />
+      <path d="M119.77729,71.5447 L116.39365,76.09747" stroke="#000000" stroke-width="0.992126" stroke-linecap="butt" stroke-linejoin="round" fill="none" />
+      <path d="M113.009995,80.650246 L109.62634,85.20302" stroke="#000000" stroke-width="0.992126" stroke-linecap="butt" stroke-linejoin="round" fill="none" />
+      <path d="M106.2427,89.75579 L102.85905,94.30856" stroke="#000000" stroke-width="0.992126" stroke-linecap="butt" stroke-linejoin="round" fill="none" />
+      <path d="M99.4754,98.86133 L96.77981,102.48831 L88.92575,104.638695" stroke="#000000" stroke-width="0.992126" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+      <path d="M83.45643,106.13616 L77.98709,107.63363" stroke="#000000" stroke-width="0.992126" stroke-linecap="butt" stroke-linejoin="round" fill="none" />
+      <path d="M72.51776,109.131096 L67.04843,110.62856" stroke="#000000" stroke-width="0.992126" stroke-linecap="butt" stroke-linejoin="round" fill="none" />
+      <path d="M61.45826,111.508545 L55.828396,112.18577" stroke="#000000" stroke-width="0.992126" stroke-linecap="butt" stroke-linejoin="round" fill="none" />
+      <path d="M50.198536,112.863 L42.113956,113.83551" stroke="#000000" stroke-width="0.992126" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    </g>
+    <g id="Default::Layer_01">
+      <path d="M196.45294,6.0371118 L159.07552,11.7107115 L126.296394,40.078712 L96.77981,96.81471 L65.696495,108.16191 L42.113956,113.83551" stroke="#000000" stroke-width="0.992126" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    </g>
+    <path d="M30.773159,119.50911 L30.773159,6.0371118" stroke="#000000" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M30.773159,85.46751 L27.937958,85.46751" stroke="#000000" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M207.79375,119.50911 L196.45294,119.50911 L42.113956,119.50911 L30.773159,119.50911" stroke="#000000" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M30.773159,6.0371118 L27.937958,6.0371118" stroke="#000000" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M30.773159,17.384312 L27.937958,17.384312" stroke="#000000" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M30.773159,28.731512 L27.937958,28.731512" stroke="#000000" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M30.773159,40.078712 L27.937958,40.078712" stroke="#000000" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M30.773159,51.42591 L27.937958,51.42591" stroke="#000000" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M30.773159,62.77311 L27.937958,62.77311" stroke="#000000" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M30.773159,74.12031 L27.937958,74.12031" stroke="#000000" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M30.773159,96.81471 L27.937958,96.81471" stroke="#000000" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M30.773159,108.16191 L27.937958,108.16191" stroke="#000000" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M30.773159,119.50911 L27.937958,119.50911" stroke="#000000" stroke-width="0.70866144" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+  </g>
+  <text x="41.36" y="19.31" font-family="Arial" font-weight="bold" font-style="italic" fill="#000000" font-size="7.888">K</text>
+  <text x="47.06" y="19.31" font-family="Arial" font-weight="bold" font-style="italic" fill="#000000" font-size="7.888">S</text>
+  <text x="52.33" y="19.31" font-family="Arial" font-weight="bold" font-style="italic" fill="#000000" font-size="7.888"> </text>
+  <text x="54.52" y="19.31" font-family="Arial" font-weight="bold" font-style="italic" fill="#000000" font-size="7.888">=</text>
+  <text x="59.14" y="19.31" font-family="Arial" font-weight="bold" font-style="italic" fill="#000000" font-size="7.888"> </text>
+  <text x="61.33" y="19.31" font-family="Arial" font-weight="bold" font-style="italic" fill="#000000" font-size="7.888">m</text>
+  <text x="68.36" y="19.31" font-family="Arial" font-weight="bold" font-style="italic" fill="#000000" font-size="7.888">a</text>
+  <text x="72.73" y="19.31" font-family="Arial" font-weight="bold" font-style="italic" fill="#000000" font-size="7.888">x</text>
+  <text x="77.11" y="19.31" font-family="Arial" font-weight="bold" font-style="italic" fill="#000000" font-size="7.888">(</text>
+  <text x="79.73" y="19.31" font-family="Arial" font-weight="bold" font-style="italic" fill="#000000" font-size="7.888">Δ</text>
+  <text x="85.03" y="19.31" font-family="Arial" font-weight="bold" font-style="italic" fill="#000000" font-size="7.888">)</text>
+  <text x="87.65" y="19.31" font-family="Arial" font-weight="bold" font-style="italic" fill="#000000" font-size="7.888"> </text>
+  <text x="89.84" y="19.31" font-family="Arial" font-weight="bold" font-style="italic" fill="#000000" font-size="7.888">=</text>
+  <text x="94.46" y="19.31" font-family="Arial" font-weight="bold" font-style="italic" fill="#000000" font-size="7.888"> </text>
+  <text x="96.65" y="19.31" font-family="Arial" font-weight="bold" font-style="italic" fill="#000000" font-size="7.888">2</text>
+  <text x="101" y="19.31" font-family="Arial" font-weight="bold" font-style="italic" fill="#000000" font-size="7.888">0</text>
+  <text x="105.4" y="19.31" font-family="Arial" font-weight="bold" font-style="italic" fill="#000000" font-size="7.888">%</text>
+  <text x="139.2" y="52.97" font-family="Arial" font-weight="bold" font-style="italic" fill="#000000" font-size="7.888">Y</text>
+  <text x="114.7" y="46.8" font-family="Arial" font-weight="bold" font-style="italic" fill="#000000" font-size="7.888">X</text>
+  <text x="90.11" y="139" font-family="Arial" fill="#000000" font-size="7.899">g</text>
+  <text x="94.48" y="139" font-family="Arial" fill="#000000" font-size="7.899">r</text>
+  <text x="97.1" y="139" font-family="Arial" fill="#000000" font-size="7.899">a</text>
+  <text x="101.5" y="139" font-family="Arial" fill="#000000" font-size="7.899">i</text>
+  <text x="103.2" y="139" font-family="Arial" fill="#000000" font-size="7.899">n</text>
+  <text x="107.6" y="139" font-family="Arial" fill="#000000" font-size="7.899"> </text>
+  <text x="109.8" y="139" font-family="Arial" fill="#000000" font-size="7.899">s</text>
+  <text x="113.7" y="139" font-family="Arial" fill="#000000" font-size="7.899">i</text>
+  <text x="115.5" y="139" font-family="Arial" fill="#000000" font-size="7.899">z</text>
+  <text x="119.4" y="139" font-family="Arial" fill="#000000" font-size="7.899">e</text>
+  <text x="123.8" y="139" font-family="Arial" fill="#000000" font-size="7.899"> </text>
+  <text x="126" y="139" font-family="Arial" fill="#000000" font-size="7.899">[</text>
+  <text x="128.2" y="139" font-family="Arial" fill="#000000" font-size="7.899">m</text>
+  <text x="134.8" y="139" font-family="Arial" fill="#000000" font-size="7.899">m</text>
+  <text x="141.3" y="139" font-family="Arial" fill="#000000" font-size="7.899">]</text>
+  <text x="39.93" y="130.9" font-family="Arial" fill="#000000" font-size="7.899">8</text>
+  <text x="154.7" y="130.9" font-family="Arial" fill="#000000" font-size="7.899">6</text>
+  <text x="159.1" y="130.9" font-family="Arial" fill="#000000" font-size="7.899">3</text>
+  <text x="8.672" y="106.7" transform="rotate(-90 8.672049309563102,106.72109638986176)" font-family="Arial" fill="#000000" font-size="7.895">m</text>
+  <text x="8.672" y="100.2" transform="rotate(-90 8.672049309563102,100.15328703742865)" font-family="Arial" fill="#000000" font-size="7.895">a</text>
+  <text x="8.672" y="95.77" transform="rotate(-90 8.672049309563088,95.77474746913991)" font-family="Arial" fill="#000000" font-size="7.895">s</text>
+  <text x="8.672" y="91.83" transform="rotate(-90 8.672049309563088,91.82789490054162)" font-family="Arial" fill="#000000" font-size="7.895">s</text>
+  <text x="8.672" y="87.88" transform="rotate(-90 8.672049309563088,87.88104233194332)" font-family="Arial" fill="#000000" font-size="7.895"> </text>
+  <text x="8.672" y="85.69" transform="rotate(-90 8.672049309563088,85.69177254779895)" font-family="Arial" fill="#000000" font-size="7.895">p</text>
+  <text x="8.672" y="81.31" transform="rotate(-90 8.672049309563088,81.3132329795102)" font-family="Arial" fill="#000000" font-size="7.895">e</text>
+  <text x="8.672" y="76.93" transform="rotate(-90 8.672049309563088,76.93469341122147)" font-family="Arial" fill="#000000" font-size="7.895">r</text>
+  <text x="8.672" y="74.31" transform="rotate(-90 8.672049309563075,74.31373662738665)" font-family="Arial" fill="#000000" font-size="7.895">c</text>
+  <text x="8.672" y="70.37" transform="rotate(-90 8.672049309563075,70.36688405878836)" font-family="Arial" fill="#000000" font-size="7.895">e</text>
+  <text x="8.672" y="65.99" transform="rotate(-90 8.672049309563075,65.98834449049961)" font-family="Arial" fill="#000000" font-size="7.895">n</text>
+  <text x="8.672" y="61.61" transform="rotate(-90 8.672049309563075,61.60980492221088)" font-family="Arial" fill="#000000" font-size="7.895">t</text>
+  <text x="8.672" y="59.42" transform="rotate(-90 8.672049309563075,59.420535138066526)" font-family="Arial" fill="#000000" font-size="7.895"> </text>
+  <text x="8.672" y="57.23" transform="rotate(-90 8.67204930956306,57.23126535392215)" font-family="Arial" fill="#000000" font-size="7.895">p</text>
+  <text x="8.672" y="52.85" transform="rotate(-90 8.67204930956306,52.852725785633396)" font-family="Arial" fill="#000000" font-size="7.895">a</text>
+  <text x="8.672" y="48.47" transform="rotate(-90 8.67204930956306,48.474186217344666)" font-family="Arial" fill="#000000" font-size="7.895">s</text>
+  <text x="8.672" y="44.53" transform="rotate(-90 8.67204930956306,44.52733364874636)" font-family="Arial" fill="#000000" font-size="7.895">s</text>
+  <text x="8.672" y="40.58" transform="rotate(-90 8.67204930956306,40.58048108014807)" font-family="Arial" fill="#000000" font-size="7.895">i</text>
+  <text x="8.672" y="38.82" transform="rotate(-90 8.67204930956306,38.82289829569414)" font-family="Arial" fill="#000000" font-size="7.895">n</text>
+  <text x="8.672" y="34.44" transform="rotate(-90 8.672049309563047,34.4443587274054)" font-family="Arial" fill="#000000" font-size="7.895">g</text>
+  <text x="8.672" y="30.07" transform="rotate(-90 8.672049309563047,30.065819159116675)" font-family="Arial" fill="#000000" font-size="7.895"> </text>
+  <text x="8.672" y="27.88" transform="rotate(-90 8.672049309563047,27.8765493749723)" font-family="Arial" fill="#000000" font-size="7.895">[</text>
+  <text x="8.672" y="25.69" transform="rotate(-90 8.672049309563047,25.687279590827938)" font-family="Arial" fill="#000000" font-size="7.895">%</text>
+  <text x="8.672" y="18.66" transform="rotate(-90 8.672049309563047,18.656948453012212)" font-family="Arial" fill="#000000" font-size="7.895">]</text>
+  <text x="89.12" y="130.9" font-family="Arial" fill="#000000" font-size="7.899">3</text>
+  <text x="93.5" y="130.9" font-family="Arial" fill="#000000" font-size="7.899">1</text>
+  <text x="97.87" y="130.9" font-family="Arial" fill="#000000" font-size="7.899">.</text>
+  <text x="100.1" y="130.9" font-family="Arial" fill="#000000" font-size="7.899">5</text>
+  <text x="61.32" y="130.9" font-family="Arial" fill="#000000" font-size="7.899">1</text>
+  <text x="65.7" y="130.9" font-family="Arial" fill="#000000" font-size="7.899">6</text>
+  <text x="16.35" y="111" font-family="Arial" fill="#000000" font-size="7.899">1</text>
+  <text x="20.73" y="111" font-family="Arial" fill="#000000" font-size="7.899">0</text>
+  <text x="16.35" y="99.65" font-family="Arial" fill="#000000" font-size="7.899">2</text>
+  <text x="20.73" y="99.65" font-family="Arial" fill="#000000" font-size="7.899">0</text>
+  <text x="16.35" y="88.3" font-family="Arial" fill="#000000" font-size="7.899">3</text>
+  <text x="20.73" y="88.3" font-family="Arial" fill="#000000" font-size="7.899">0</text>
+  <text x="16.35" y="76.96" font-family="Arial" fill="#000000" font-size="7.899">4</text>
+  <text x="20.73" y="76.96" font-family="Arial" fill="#000000" font-size="7.899">0</text>
+  <text x="121.9" y="130.9" font-family="Arial" fill="#000000" font-size="7.899">4</text>
+  <text x="126.3" y="130.9" font-family="Arial" fill="#000000" font-size="7.899">5</text>
+  <text x="16.35" y="65.61" font-family="Arial" fill="#000000" font-size="7.899">5</text>
+  <text x="20.73" y="65.61" font-family="Arial" fill="#000000" font-size="7.899">0</text>
+  <text x="16.35" y="54.26" font-family="Arial" fill="#000000" font-size="7.899">6</text>
+  <text x="20.73" y="54.26" font-family="Arial" fill="#000000" font-size="7.899">0</text>
+  <text x="16.35" y="42.92" font-family="Arial" fill="#000000" font-size="7.899">7</text>
+  <text x="20.73" y="42.92" font-family="Arial" fill="#000000" font-size="7.899">0</text>
+  <text x="192.1" y="130.9" font-family="Arial" fill="#000000" font-size="7.899">9</text>
+  <text x="196.5" y="130.9" font-family="Arial" fill="#000000" font-size="7.899">0</text>
+  <text x="16.35" y="31.57" font-family="Arial" fill="#000000" font-size="7.899">8</text>
+  <text x="20.73" y="31.57" font-family="Arial" fill="#000000" font-size="7.899">0</text>
+  <text x="16.35" y="20.22" font-family="Arial" fill="#000000" font-size="7.899">9</text>
+  <text x="20.73" y="20.22" font-family="Arial" fill="#000000" font-size="7.899">0</text>
+  <text x="11.97" y="8.874" font-family="Arial" fill="#000000" font-size="7.899">1</text>
+  <text x="16.35" y="8.874" font-family="Arial" fill="#000000" font-size="7.899">0</text>
+  <text x="20.73" y="8.874" font-family="Arial" fill="#000000" font-size="7.899">0</text>
+  <text x="20.73" y="122.3" font-family="Arial" fill="#000000" font-size="7.899">0</text>
+</svg>

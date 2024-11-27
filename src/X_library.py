@@ -327,7 +327,7 @@ class plotter(laboratory, utilities):
         self.lss = ['-', '--', ':', '-.'] * 2  # choice of linestyles
 
     def required_mass_plot(self, max_grain_size: float, savepath: str,
-                           close: bool = True) -> None:
+                           save_pdf: bool = False, close: bool = True) -> None:
         '''plot that shows the theoretically required sample mass acc. to the
         standards'''
         sizes = np.arange(max_grain_size)  # [mm]
@@ -346,8 +346,8 @@ class plotter(laboratory, utilities):
             ax.text(x=vline+2, y=max(ms_ASTM), s=f'{vline}\nmm', ha='left',
                     va='top', fontsize=self.fsize)
         ax.grid(alpha=0.5, axis='y')
-        ax.set_xlabel('max. grain diameter of soil [mm]', fontsize=self.fsize)
-        ax.set_ylabel('required sample mass [kg]', fontsize=self.fsize)
+        ax.set_xlabel('max. grain diameter\n$D_{max}$ [mm]', fontsize=self.fsize)
+        ax.set_ylabel('required sample mass\n$m_{min}$ [kg]', fontsize=self.fsize)
         ax.set_xlim(left=2)
         ax.set_yscale('log')
         ax.yaxis.set_major_formatter(
@@ -357,11 +357,13 @@ class plotter(laboratory, utilities):
 
         plt.tight_layout()
         plt.savefig(savepath, dpi=600)
+        if save_pdf is True:
+            plt.savefig(savepath[:-3]+'pdf')
         if close is True:
             plt.close()
 
     def error_violin_plot(self, df: pd.DataFrame, savepath: str,
-                          close: bool = True) -> None:
+                          save_pdf: bool = False, close: bool = True) -> None:
         '''violin plots showing the KS-errors of sieve curves of soils sampled
         according to ISO and ASTM standard'''
         med_ISO = round(df['ISO ks [%]'].median(), 1)
@@ -404,39 +406,95 @@ class plotter(laboratory, utilities):
 
         plt.tight_layout()
         plt.savefig(savepath, dpi=600)
+        if save_pdf is True:
+            plt.savefig(savepath[:-3]+'pdf')
         if close is True:
             plt.close()
 
     def req_sample_mass_vs_dmax_plot(self, df: pd.DataFrame, savepath: str,
+                                     save_pdf: bool = False,
                                      annotate_all=False, annotate_some=None,
                                      close: bool = True) -> None:
         '''plot shows results from Monte-Carlo simulation where the required
         sample mass to achieve a certain KS error is scattered against the soil
         d_max'''
-        dmaxs = np.arange(200)
-        req_ISO = [self.ISO_required_sample_mass(dmax)/1000 for dmax in dmaxs]
-        req_ASTM = [self.ASTM_required_sample_mass(dmax)/1000 for dmax in dmaxs]
 
-        fig, ax = plt.subplots(figsize=(3.54331, 3))
+        def add_scatter_axis():
+            '''add axis to the figure that contains the scatterplot of dmax vs
+            required sample mass'''
+            ax = plt.gca()
 
-        divider = make_axes_locatable(ax)
-        cax = divider.append_axes('right', size='5%', pad=0.05)
+            dmaxs = np.arange(200)
+            req_ISO = [self.ISO_required_sample_mass(dmax)/1000 for dmax in dmaxs]
+            req_ASTM = [self.ASTM_required_sample_mass(dmax)/1000 for dmax in dmaxs]
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes('right', size='5%', pad=0.05)
 
-        im = ax.scatter(df['max diameter [mm]'],
-                        df['req. mass ks_p95 <= 10 [kg]'],
-                        c=df['S0'], cmap='Greys', edgecolor='black', lw=0.2,
-                        label='simulated samples', s=8)
+            im = ax.scatter(df['max diameter [mm]'],
+                            df['req. mass ks_p95 <= 10 [kg]'],
+                            c=df['S0'], cmap='Greys', edgecolor='black',
+                            lw=0.2, label='simulated samples', s=8, vmax=9)
 
-        ax.plot(dmaxs, req_ISO, color='dimgrey', ls='--',
-                label='ISO req. sample mass')
-        ax.plot(dmaxs, req_ASTM, color='dimgrey', ls='-',
-                label='ASTM req. sample mass')
-        if annotate_all is True:
-            for i in range(len(df)):
-                ax.text(x=df['max diameter [mm]'].iloc[i],
-                        y=df['req. mass ks_p95 <= 10 [kg]'].iloc[i],
-                        s=df['ID'].iloc[i])
-        if annotate_some is not None:
+            ax.plot(dmaxs, req_ISO, color='dimgrey', ls='--',
+                    label='ISO req. sample mass')
+            ax.plot(dmaxs, req_ASTM, color='dimgrey', ls='-',
+                    label='ASTM req. sample mass')
+            if annotate_all is True:
+                for i in range(len(df)):
+                    ax.text(x=df['max diameter [mm]'].iloc[i],
+                            y=df['req. mass ks_p95 <= 10 [kg]'].iloc[i],
+                            s=df['ID'].iloc[i])
+
+            ax.set_xlabel('max. grain diameter\n$D_{max}$ [mm]',
+                          fontsize=self.fsize)
+            ax.set_ylabel('required sample mass\n$m_{min}$ [kg]',
+                          fontsize=self.fsize)
+            ax.grid(alpha=0.5)
+            ax.set_ylim(bottom=0, top=400)
+            ax.legend(fontsize=self.fsize, loc='upper left')
+
+            cbar = fig.colorbar(im, cax=cax, orientation='vertical')
+
+            cbar.set_label(label=r'sorting coefficient - $S_0$',
+                           fontsize=self.fsize)
+            # ticks = cbar.ax.get_yticks()
+            # ticklabs = cbar.ax.get_yticklabels()
+            # cbar.ax.set_yticks(ticks)
+            # cbar.ax.set_yticklabels(ticklabs, fontsize=self.fsize)
+            ax.tick_params(axis='both', labelsize=self.fsize)
+
+        def add_simple_sieve_plot_axis():
+            '''simple sieve curves plot to combine with
+            req_sample_mass_vs_dmax_plot'''
+
+            ax = plt.gca()
+
+            mpercs = [c for c in df.columns if ' mm sieve [m%]' in c]
+            ssizes = [eval(s.split(' ')[0]) for s in mpercs]
+
+            for i, id_ in enumerate(annotate_some):
+                ax.plot(ssizes, df[mpercs].iloc[id_].values, color='black',
+                        ls=self.lss[i], label=id_)
+
+            ax.set_xscale('log')
+            ax.set_xlabel('grain size [mm]', fontsize=self.fsize)
+            ax.set_ylabel('mass percentage passing [%]', fontsize=self.fsize)
+            ax.set_xticks([2, 63, 200])
+            ax.xaxis.set_major_formatter(ticker.FormatStrFormatter('%.0f'))
+            ax.grid(alpha=0.5)
+            ax.tick_params(axis='both', labelsize=self.fsize)
+            ax.legend(fontsize=self.fsize, loc='lower right')
+
+        fig = plt.figure(figsize=(3.54331, 3))
+
+        if annotate_some is None:
+            ax = fig.add_subplot(111)
+            add_scatter_axis()
+        else:
+            fig.set_size_inches(3.54331, 6)
+
+            ax = fig.add_subplot(211)
+            add_scatter_axis()
             for id_ in annotate_some:
                 ax.scatter(df['max diameter [mm]'].iloc[id_],
                            df['req. mass ks_p95 <= 10 [kg]'].iloc[id_],
@@ -448,55 +506,18 @@ class plotter(laboratory, utilities):
                             fontsize=self.fsize, weight='bold', zorder=100)
                 t.set_bbox(dict(facecolor='white', alpha=0.5, lw=0))
 
-        ax.set_xlabel('max diameter [mm]', fontsize=self.fsize)
-        ax.set_ylabel('req. sample mass [kg]', fontsize=self.fsize)
-        ax.grid(alpha=0.5)
-        ax.set_ylim(bottom=0, top=400)
-        ax.legend(fontsize=self.fsize, loc='upper left')
-
-        cbar = fig.colorbar(im, cax=cax, orientation='vertical')
-
-        cbar.set_label(label=r'sorting coefficient - $S_0$',
-                       fontsize=self.fsize)
-        ticks = cbar.ax.get_yticks()
-        ticklabs = cbar.ax.get_yticklabels()
-        cbar.ax.set_yticks(ticks)
-        cbar.ax.set_yticklabels(ticklabs, fontsize=self.fsize)
-        ax.tick_params(axis='both', labelsize=self.fsize)
+            ax = fig.add_subplot(212)
+            add_simple_sieve_plot_axis()
 
         plt.tight_layout()
         plt.savefig(savepath, dpi=600)
-        if close is True:
-            plt.close()
-
-    def simple_sieve_plot(self, df: pd.DataFrame, ids: list, savepath: str,
-                          close: bool = True) -> None:
-        '''simple sieve curves plot to combine with
-        req_sample_mass_vs_dmax_plot'''
-        mpercs = [c for c in df.columns if ' mm sieve [m%]' in c]
-        ssizes = [eval(s.split(' ')[0]) for s in mpercs]
-
-        fig, ax = plt.subplots(figsize=(3.54331, 3))
-        for i, id_ in enumerate(ids):
-            ax.plot(ssizes, df[mpercs].iloc[id_].values, color='black',
-                    ls=self.lss[i], label=id_)
-
-        ax.set_xscale('log')
-        ax.set_xlabel('grain size [mm]', fontsize=self.fsize)
-        ax.set_ylabel('mass percentage passing [%]', fontsize=self.fsize)
-        ax.set_xticks([2, 63, 200])
-        ax.xaxis.set_major_formatter(ticker.FormatStrFormatter('%.0f'))
-        ax.grid(alpha=0.5)
-        ax.tick_params(axis='both', labelsize=self.fsize)
-        ax.legend(fontsize=self.fsize, loc='lower right')
-
-        plt.tight_layout()
-        plt.savefig(savepath, dpi=600)
+        if save_pdf is True:
+            plt.savefig(savepath[:-3]+'pdf')
         if close is True:
             plt.close()
 
     def req_sample_mass_vs_d90_plot(self, df, savepath: str,
-                                    annotate_some=None,
+                                    annotate_some=None, save_pdf: bool = False,
                                     close: bool = True) -> None:
         '''plot shows results from Monte-Carlo simulation where the required
         sample mass to achieve a certain KS error is scattered against the soil
@@ -529,8 +550,8 @@ class plotter(laboratory, utilities):
                         weight='bold', zorder=100)
                 t.set_bbox(dict(facecolor='white', alpha=0.5, lw=0))
 
-        ax.set_xlabel('d90 [mm]', fontsize=self.fsize)
-        ax.set_ylabel('req. sample mass [kg]', fontsize=self.fsize)
+        ax.set_xlabel('$D_{90}$ [mm]', fontsize=self.fsize)
+        ax.set_ylabel('required sample mass\n$m_{min}$ [kg]', fontsize=self.fsize)
         ax.grid(alpha=0.5)
         ax.set_ylim(bottom=0, top=400)
 
@@ -545,11 +566,13 @@ class plotter(laboratory, utilities):
 
         plt.tight_layout()
         plt.savefig(savepath, dpi=600)
+        if save_pdf is True:
+            plt.savefig(savepath[:-3]+'pdf')
         if close is True:
             plt.close()
 
     def exponents_plot(self, df: pd.DataFrame, savepath: str,
-                       close: bool = True) -> None:
+                       save_pdf: bool = False, close: bool = True) -> None:
         '''plot that shows the different error exponents in relation to
         parameters like minimum required smaple mass, d90, and KS error'''
         # compute statistics
@@ -582,8 +605,8 @@ class plotter(laboratory, utilities):
 
         ax1.grid(alpha=0.4)
         ax1.legend(fontsize=self.fsize)
-        ax1.set_ylabel(r'$m_{min}$ [kg]', fontsize=self.fsize)
-        ax1.set_xlabel('d90 [mm]', fontsize=self.fsize)
+        ax1.set_ylabel('required sample mass\n$m_{min}$ [kg]', fontsize=self.fsize)
+        ax1.set_xlabel('$D_{90}$ [mm]', fontsize=self.fsize)
         ax1.tick_params(axis='both', labelsize=self.fsize)
 
         ax2.scatter(exponents, med_errors,  # label=r'$KS_{med}$',
@@ -610,10 +633,13 @@ class plotter(laboratory, utilities):
 
         plt.tight_layout()
         plt.savefig(savepath, dpi=600)
+        if save_pdf is True:
+            plt.savefig(savepath[:-3]+'pdf')
         if close is True:
             plt.close()
 
-    def comparison_plot(self, df, savepath: str, close: bool = True) -> None:
+    def comparison_plot(self, df, savepath: str, save_pdf: bool = False,
+                        close: bool = True) -> None:
         '''plot that compares ISO and ASTM sample requirements with new ones'''
 
         fig, (ax1, ax2) = plt.subplots(ncols=1, nrows=2,
@@ -626,8 +652,8 @@ class plotter(laboratory, utilities):
         ax1.text(400, 400, '1:1', weight='bold', fontsize=self.fsize,
                  ha='right')
         ax1.grid(alpha=0.5)
-        ax1.set_xlabel('ISO req. mass [kg]', fontsize=self.fsize)
-        ax1.set_ylabel('req. mass acc. new criterium [kg]',
+        ax1.set_xlabel('$m_{min}$ acc. ISO [kg]', fontsize=self.fsize)
+        ax1.set_ylabel('$m_{min}$ acc. new criterium [kg]',
                        fontsize=self.fsize)
         ax1.tick_params(axis='both', labelsize=self.fsize)
 
@@ -638,17 +664,19 @@ class plotter(laboratory, utilities):
         ax2.text(1200, 1200, '1:1', weight='bold', fontsize=self.fsize,
                  ha='right')
         ax2.grid(alpha=0.5)
-        ax2.set_xlabel('ASTM req. mass [kg]', fontsize=self.fsize)
-        ax2.set_ylabel('req. mass acc. new criterium [kg]',
+        ax2.set_xlabel('$m_{min}$ acc. ASTM [kg]', fontsize=self.fsize)
+        ax2.set_ylabel('$m_{min}$ acc. new criterium [kg]',
                        fontsize=self.fsize)
         ax2.tick_params(axis='both', labelsize=self.fsize)
 
         plt.tight_layout()
         plt.savefig(savepath, dpi=600)
+        if save_pdf is True:
+            plt.savefig(savepath[:-3]+'pdf')
         if close is True:
             plt.close()
 
-    def real_sieve_curves_plot(self, savepath: str,
+    def real_sieve_curves_plot(self, savepath: str, save_pdf: bool = False,
                                close: bool = True) -> None:
         '''function that plots the real laboratory sieve tests based on an
         excel file'''
@@ -679,10 +707,12 @@ class plotter(laboratory, utilities):
 
         plt.tight_layout()
         plt.savefig(savepath, dpi=600)
+        if save_pdf is True:
+            plt.savefig(savepath[:-3]+'pdf')
         if close is True:
             plt.close()
 
-    def real_sieve_curves_scatter(self, savepath: str,
+    def real_sieve_curves_scatter(self, savepath: str, save_pdf: bool = False,
                                   close: bool = True) -> None:
         '''function that creates a scatter plot that scatters Cc and Cu from
         ISO sample masses against smaller sample masses'''
@@ -781,11 +811,14 @@ class plotter(laboratory, utilities):
 
         plt.tight_layout()
         plt.savefig(savepath, dpi=600)
+        if save_pdf is True:
+            plt.savefig(savepath[:-3]+'pdf')
         if close is True:
             plt.close()
 
     def distances_plot(self, req_sample_masses: list, ks_distances: list,
-                       savepath: str, close: bool = True) -> None:
+                       savepath: str, save_pdf: bool = False,
+                       close: bool = True) -> None:
         '''plot a soil distribution vs. distributions of different samples with
         reduced mass and also their kolmogorov smirnov distance'''
         fig, ax = plt.subplots(figsize=(6, 6), nrows=1, ncols=1)
@@ -798,6 +831,8 @@ class plotter(laboratory, utilities):
 
         plt.tight_layout()
         plt.savefig(savepath, dpi=600)
+        if save_pdf is True:
+            plt.savefig(savepath[:-3]+'pdf')
         if close is True:
             plt.close()
 
@@ -912,6 +947,8 @@ class plotter(laboratory, utilities):
                           sieved_samples: list = None,
                           req_sample_masses: list = None,
                           ks_distances: list = None,
+                          show_dxxs: dict = None,
+                          save_pdf: bool = False,
                           close: bool = True) -> None:
         '''plot sieve curves of soil distributions and taken samples'''
         cmap = matplotlib.colormaps['inferno']
@@ -922,6 +959,7 @@ class plotter(laboratory, utilities):
         if len(np.array(fractions_true).shape) == 1:
             ax.plot(SIEVE_SIZES, fractions_true, label="underlying soil",
                     color='black', lw=3)
+            ax.legend(loc='upper left', fontsize=12)
         else:
             for i, f in enumerate(fractions_true):
                 if color is None:
@@ -936,12 +974,18 @@ class plotter(laboratory, utilities):
                     SIEVE_SIZES, np.array(sieved_samples[i]),
                     label=f"sample {round(req_sample_masses[i], 1)}kg  ks: {round(ks_distances[i], 1)} %",
                     alpha=0.8)
+            ax.legend(loc='upper left', fontsize=12)
 
-        ax.legend(loc='upper left', fontsize=12)
+        # if show_dxxs is not None:
+        #     for d_x in show_dxxs.keys():
+        #         d = 
+        #         ax.plot([])
 
         plt.tight_layout()
         if savepath is not None:
             plt.savefig(savepath, dpi=600)
+            if save_pdf is True:
+                plt.savefig(savepath[:-3]+'pdf')
         if close is True:
             plt.close()
 

@@ -34,10 +34,10 @@ df['new. req. mass ASTM [kg]'] = (df['d90']/10)**((np.log(5.3)-np.log(123.65))/-
 # ratio
 df['comparison ISO'] = df['ISO req. mass [kg]'] / df['new. req. mass ISO [kg]']
 df['comparison ASTM'] = df['ASTM req. mass [kg]'] / df['new. req. mass ASTM [kg]']
-print(f"ISO mass = {round(df['comparison ISO'].mean(), 2)} larger on avg")
-print(f"ISO mass = {round(df['comparison ISO'].max(), 2)} larger at max")
-print(f"ASTM mass = {round(df['comparison ASTM'].mean(), 2)} larger on avg")
-print(f"ASTM mass = {round(df['comparison ASTM'].max(), 2)} larger at max")
+print(f"ISO mass = {round(df['comparison ISO'].mean(), 1)} larger on avg")
+print(f"ISO mass = {round(df['comparison ISO'].max(), 1)} larger at max")
+print(f"ASTM mass = {round(df['comparison ASTM'].mean(), 1)} larger on avg")
+print(f"ASTM mass = {round(df['comparison ASTM'].max(), 1)} larger at max")
 # move ID column to the front
 ID_column = df.pop('ID')
 df.insert(0, 'ID', ID_column)
@@ -48,50 +48,48 @@ df.to_excel(fr'../simulations/MonteCarloSimulations_{STUDY_NAME}.xlsx', index=Fa
 ###############################
 
 # plot to visualize theoretically required sample mass
-pltr.required_mass_plot(300, '../figures/required_mass.svg')
+pltr.required_mass_plot(300, '../figures/required_mass.svg', save_pdf=True)
 
 # plot showing errors of ASTM and ISO
-pltr.error_violin_plot(df, r'../figures/error_violin.jpg')
+pltr.error_violin_plot(df, r'../figures/error_violin.svg', save_pdf=True)
 
 # scatterplot showing required sample mass against max diameter
+ANNOTATE = [942, 725, 648, 875]
 pltr.req_sample_mass_vs_dmax_plot(df, annotate_all=False,
-                                  # annotate_some=[310, 210, 94, 52],
-                                  close=True,
-                                  savepath=r'../figures/req_mass_dmax.jpg')
-
-# plot individual simplified sieve curves for combined plots
-# 310 ... max req. mass, 210 ... max dmax & max req. mass, 94... min dmax
-# 52 ... center
-# pltr.simple_sieve_plot(df, ids=[310, 210, 94, 52], close=True,
-#                        savepath=r'../figures/req_mass_dmax_samples.jpg')
+                                  annotate_some=ANNOTATE, close=True,
+                                  savepath=r'../figures/req_mass_dmax.svg',
+                                  save_pdf=True)
 
 # plot showing required sample mass against d90
-pltr.req_sample_mass_vs_d90_plot(df,
-                                 # annotate_some=[310, 94, 210, 52],
-                                 savepath=r'../figures/req_mass_d90.jpg')
+pltr.req_sample_mass_vs_d90_plot(df, annotate_some=ANNOTATE,
+                                 savepath=r'../figures/req_mass_d90.svg',
+                                 save_pdf=True)
 
 # plot showing new m_min functions with different epsilon
 # and plot showing relationship between exponent and errors
-pltr.exponents_plot(df, savepath=r'../figures/exponents.jpg')
+pltr.exponents_plot(df, savepath=r'../figures/exponents.svg',
+                    save_pdf=True)
 
 # plot showing a comparison between standard required sample masses and new one
-pltr.comparison_plot(df, savepath=r'../figures/comparison.jpg')
+pltr.comparison_plot(df, savepath=r'../figures/comparison.svg', save_pdf=True)
 
 # plot showing exemplary sieve curves
 sieve_cols = [c for c in df.columns if 'mm sieve [m%]' in c]
 sieve_sizes = [eval(s.split(' ')[0]) for s in sieve_cols]
-fractions_trues = [list(df[sieve_cols].iloc[i].values) for i in range(90)]
+fractions_trues = [list(df[sieve_cols].iloc[i].values) for i in range(100)]
 
 pltr.sieve_curves_plot(SIEVE_SIZES=sieve_sizes, fractions_true=fractions_trues,
                        color=df['S0'],
-                       savepath=r'../figures/sieve_samples_new.jpg',
-                       close=True)
+                       savepath=r'../figures/sieve_samples_new.svg',
+                       close=True, save_pdf=True)
 
 # plot showing real lab results: sieve curves
-pltr.real_sieve_curves_plot(savepath=r'../laboratory/lab_tests_PSDs.jpg')
+pltr.real_sieve_curves_plot(savepath=r'../laboratory/lab_tests_PSDs.svg',
+                            save_pdf=True)
 
 # plot showing real lab results: scatter plot
-pltr.real_sieve_curves_scatter(r'../laboratory/lab_tests_CcCu_scatter.jpg')
+pltr.real_sieve_curves_scatter(r'../laboratory/lab_tests_CcCu_scatter.svg',
+                               save_pdf=True)
 
 ###############################
 # other analyses of the simulations
@@ -99,8 +97,8 @@ pltr.real_sieve_curves_scatter(r'../laboratory/lab_tests_CcCu_scatter.jpg')
 
 # check correlation between parameters and "bottom up" determined required
 # sample mass
-for f in ['Cu', 'Cc', 'S0', 'max diameter [mm]', 'd10', 'd12', 'd25',
-          'd30', 'd50', 'd60', 'd75', 'd90']:
+for f in ['Cu', 'Cc', 'S0', 'min diameter [mm]', 'max diameter [mm]',
+          'd10', 'd20', 'd30', 'd40', 'd50', 'd60', 'd70', 'd80', 'd90']:
     cc = np.corrcoef(df[f], df['req. mass ks_p95 <= 10 [kg]'])[0][1]
     print(f'{round(cc, 2)} = corr. coeff. {f} - required mass')
 
