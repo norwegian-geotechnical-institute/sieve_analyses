@@ -29,8 +29,8 @@ lab, pltr, utils = laboratory(), plotter(), utilities()
 
 # apply new functions to compute sample mass recommendations with ISO and
 # ASTM p95 errors: ISO 7.7, ASTM 5.3
-df['new. req. mass ISO [kg]'] = (df['d90']/10)**((np.log(7.7)-np.log(123.65))/-1.29)
-df['new. req. mass ASTM [kg]'] = (df['d90']/10)**((np.log(5.3)-np.log(123.65))/-1.29)
+df['new. req. mass ISO [kg]'] = (df['d90']/10)**((np.log(8.0)-np.log(118.11))/-1.24)
+df['new. req. mass ASTM [kg]'] = (df['d90']/10)**((np.log(5.7)-np.log(118.11))/-1.24)
 # ratio
 df['comparison ISO'] = df['ISO req. mass [kg]'] / df['new. req. mass ISO [kg]']
 df['comparison ASTM'] = df['ASTM req. mass [kg]'] / df['new. req. mass ASTM [kg]']
