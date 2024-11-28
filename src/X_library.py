@@ -48,7 +48,7 @@ class laboratory(statistics):
         return mass  # [g]
 
     def ASTM_required_sample_mass(self, d_max: float) -> float:
-        '''calculate required sample mass acc. to ASTM D6913/D6913M − 17,
+        '''calculate required sample mass acc. to ASTM D6913/D6913M,
         method A'''
         density = 3  # [g/mm3] ... ASTM seems to use this high grain density
 
@@ -338,7 +338,7 @@ class plotter(laboratory, utilities):
         ax.plot(sizes, ms_ISO, color='black', ls='--',
                 label='ISO 17892-4', zorder=10)
         ax.plot(sizes, ms_ASTM, color='black', ls='-',
-                label='ASTM D6913/D6913M − 17', zorder=10)
+                label='ASTM D6913/D6913M', zorder=10)
         vlines = (20, 63, 200)
         ax.vlines(vlines, ymin=0, ymax=max(ms_ASTM), color='grey',
                   zorder=5)
@@ -400,7 +400,7 @@ class plotter(laboratory, utilities):
         ax.set_ylabel('Kolmogorov-Smirnov statisic [mass %]',
                       fontsize=self.fsize)
         ax.set_ylim(top=-1, bottom=15)
-        ax.set_xticks([1, 2], labels=['ISO 17892-4', 'ASTM D6913/D6913M – 17'],
+        ax.set_xticks([1, 2], labels=['ISO 17892-4', 'ASTM D6913/D6913M'],
                       fontsize=self.fsize)
         ax.tick_params(axis='both', labelsize=self.fsize)
 
@@ -748,7 +748,7 @@ class plotter(laboratory, utilities):
                     label='Soil B (1 kg)', s=ms, marker='v', color='C0')
         ax1.scatter(df['Soil B (ISO)'].loc['Cc'],
                     df['Soil B (300g)'].loc['Cc'],
-                    label='Soil A (0.3 kg)', s=ms, marker='v', color='C1')
+                    label='Soil B (0.3 kg)', s=ms, marker='v', color='C1')
 
         ax1.scatter(df['Soil C (ISO)'].loc['Cc'], df['Soil C'].loc['Cc'],
                     label='Soil C (20kg)', s=ms, marker='P', color='C0')
@@ -788,7 +788,7 @@ class plotter(laboratory, utilities):
                     label='Soil B (1 kg)', s=ms, marker='v', color='C0')
         ax2.scatter(df['Soil B (ISO)'].loc['Cu'],
                     df['Soil B (300g)'].loc['Cu'],
-                    label='Soil A (0.3 kg)', s=ms, marker='v', color='C1')
+                    label='Soil B (0.3 kg)', s=ms, marker='v', color='C1')
 
         ax2.scatter(df['Soil C (ISO)'].loc['Cu'], df['Soil C'].loc['Cu'],
                     label='Soil C (20kg)', s=ms, marker='P', color='C0')
@@ -957,8 +957,8 @@ class plotter(laboratory, utilities):
 
         # plot data
         if len(np.array(fractions_true).shape) == 1:
-            ax.plot(SIEVE_SIZES, fractions_true, label="underlying soil",
-                    color='black', lw=3)
+            ax.plot(SIEVE_SIZES, fractions_true, label="soil", color='black',
+                    lw=3)
             ax.legend(loc='upper left', fontsize=12)
         else:
             for i, f in enumerate(fractions_true):
@@ -972,7 +972,7 @@ class plotter(laboratory, utilities):
             for i in range(len(sieved_samples)):
                 ax.plot(
                     SIEVE_SIZES, np.array(sieved_samples[i]),
-                    label=f"sample {round(req_sample_masses[i], 1)}kg  ks: {round(ks_distances[i], 1)} %",
+                    label=f"sample {round(req_sample_masses[i], 1)} kg  $KS$: {round(ks_distances[i], 1)} %",
                     alpha=0.8)
             ax.legend(loc='upper left', fontsize=12)
 
