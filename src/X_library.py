@@ -18,7 +18,6 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 import pandas as pd
 from scipy.optimize import curve_fit
-from tqdm import tqdm
 
 
 class statistics:
@@ -947,7 +946,6 @@ class plotter(laboratory, utilities):
                           sieved_samples: list = None,
                           req_sample_masses: list = None,
                           ks_distances: list = None,
-                          show_dxxs: dict = None,
                           save_pdf: bool = False,
                           close: bool = True) -> None:
         '''plot sieve curves of soil distributions and taken samples'''
@@ -975,11 +973,6 @@ class plotter(laboratory, utilities):
                     label=f"sample {round(req_sample_masses[i], 1)} kg  $KS$: {round(ks_distances[i], 1)} %",
                     alpha=0.8)
             ax.legend(loc='upper left', fontsize=12)
-
-        # if show_dxxs is not None:
-        #     for d_x in show_dxxs.keys():
-        #         d = 
-        #         ax.plot([])
 
         plt.tight_layout()
         if savepath is not None:

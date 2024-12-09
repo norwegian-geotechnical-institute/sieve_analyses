@@ -4,6 +4,8 @@ Determining particle size distributions (PSD) of soils is a basic first step in 
 ## Publication
 This repository contains the code for the above described Monte-Carlo simulation and is published alongside a paper that is submitted to the journal **Engineering Geology**. The paper has the title *"Uncertainty aware sample mass determination of coarse-grained soils for particle size analyses"* and was originally submitted in August 2024, then rejected and a major revision was submitted in December 2024.
 
+A preprint of the paper can be found on EarthArXiv: https://eartharxiv.org/repository/view/7592/
+
 ## Repository and code structure
 
 The code framework depends on a certain folder structure. The main functionality is in the src folder. Here are mainly two types of files:

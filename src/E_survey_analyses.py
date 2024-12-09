@@ -18,7 +18,7 @@ import pandas as pd
 ###############################
 
 # load ground truth data
-fp_gt = r'C:\Users\GEr\OneDrive - NGI\Research\Internal_Funding\GBV_GrainSizes\sieve_analyses\samples\analyses\Sample_selection_map.xlsx'
+fp_gt = r'..\samples\Sample_selection_map.xlsx'
 df_gt = pd.read_excel(fp_gt)
 
 # load data from survey
@@ -110,8 +110,8 @@ axs[2].pie(e_counts[sort_ids], labels=expertise[sort_ids], autopct='%1.0f%%',
 axs[2].set_title('Years of experience post master')
 
 plt.tight_layout()
-plt.savefig(r'../samples/analyses/result_participants.svg')
-plt.savefig(r'../samples/analyses/result_participants.pdf')
+plt.savefig(r'../samples/result_participants.svg')
+plt.savefig(r'../samples/result_participants.pdf')
 plt.close()
 
 # plots to show results for Cu, Cc
@@ -164,8 +164,8 @@ axs[1].tick_params(axis='both', labelsize=8)
 axs[1].set_ylim(bottom=0, top=4)
 
 plt.tight_layout()
-plt.savefig(r'../samples/analyses/result_Cc_Cu.svg')
-plt.savefig(r'../samples/analyses/result_Cc_Cu.pdf')
+plt.savefig(r'../samples/result_Cc_Cu.svg')
+plt.savefig(r'../samples/result_Cc_Cu.pdf')
 plt.close()
 
 # plot to show results for every sample
@@ -211,6 +211,6 @@ for sample in [0, 1, 2, 3]:
     ax.legend(loc='upper left', fontsize=8)
 
 plt.tight_layout()
-plt.savefig(r'../samples/analyses/result_samples.svg')
-plt.savefig(r'../samples/analyses/result_samples.pdf')
+plt.savefig(r'../samples/result_samples.svg')
+plt.savefig(r'../samples/result_samples.pdf')
 plt.close()

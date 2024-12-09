@@ -113,16 +113,16 @@ df = pd.DataFrame(columns=['d_min', 'd_max', 'Cu', 'Cc', 'S0']+list(ds.keys()))
 for d in ds.keys():
     df.loc[0, d] = ds[d]
 df.loc[0, ['Cu', 'Cc', 'S0', 'd_min', 'd_max']] = [Cu, Cc, S0, d_min, d_max]
-df.to_excel(fr'../samples/analyses/{SEED}_stats.xlsx')
+df.to_excel(fr'../samples/simulations/{SEED}_stats.xlsx')
 
 ###############################
 # plotting of samples
 ###############################
 
 # sieve curve of sample
-pltr.sieve_curves_plot(sieve_sizes, list(fractions_true.values()),
-                       close=True,
-                       savepath=fr'../samples/analyses/{SEED}_sieve_curve.jpg')
+pltr.sieve_curves_plot(
+    sieve_sizes, list(fractions_true.values()), close=True,
+    savepath=fr'../samples/simulations/{SEED}_sieve_curve.jpg')
 
 # visualization of sample
 fig = plt.figure(figsize=(9, 10))
@@ -166,5 +166,5 @@ ax2.set_xlim(0, BOX_SIZE)
 ax2.set_ylim(0, 100)
 ax2.axis('off')
 
-plt.savefig(fr'../samples/analyses/{SEED}_sample.jpg', dpi=600)
+plt.savefig(fr'../samples/simulations/{SEED}_sample.jpg', dpi=600)
 plt.close()
