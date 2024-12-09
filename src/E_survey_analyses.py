@@ -22,7 +22,7 @@ fp_gt = r'C:\Users\GEr\OneDrive - NGI\Research\Internal_Funding\GBV_GrainSizes\s
 df_gt = pd.read_excel(fp_gt)
 
 # load data from survey
-fp_s = r'C:\Users\GEr\Downloads\Particle size distribution characterization survey(1-49)_mod.xlsx'
+fp_s = r'C:\Users\GEr\OneDrive - NGI\Research\Internal_Funding\GBV_GrainSizes\Survey_results\Particle size distribution characterization survey(1-95)_mod.xlsx'
 df_s = pd.read_excel(fp_s)
 
 for c in df_s.columns:
@@ -56,6 +56,8 @@ average_guess_Cc = df_s[['S0_Cc', 'S1_Cc', 'S2_Cc', 'S3_Cc']].mean(axis=0)
 df_s['What is your main area of expertise?\n'] = df_s['What is your main area of expertise?\n'].replace(
     {'Engineering geology': 'Engineering\ngeology',
      'Quaternary geology': 'Other',  # TODO check if there is more
+     'Hydrogeology': 'Other',
+     'Environmental geology': 'Other',
      'geophysics': 'Geophysics',
      'Digital engineering applied to geotechnics and strctures': 'Geotechnics',
      'Geotechnical engineering': 'Geotechnics',
@@ -84,7 +86,7 @@ professions, p_counts = np.unique(
 sort_ids = np.flip(np.argsort(p_counts))
 axs[0].pie(p_counts[sort_ids], labels=professions[sort_ids], autopct='%1.0f%%',
            pctdistance=0.7, startangle=90, colors=colors,
-           wedgeprops={'edgecolor': 'black'}, radius=0.8,
+           wedgeprops={'edgecolor': 'black'}, radius=0.9,
            textprops={'fontsize': 8})
 axs[0].set_title('Main area of expertise')
 
@@ -93,7 +95,7 @@ fields, f_counts = np.unique(
 sort_ids = [1, 0, 2]
 axs[1].pie(f_counts[sort_ids], labels=fields[sort_ids], autopct='%1.0f%%',
            pctdistance=0.8, startangle=90, colors=colors,
-           wedgeprops={'edgecolor': 'black'}, radius=0.8,
+           wedgeprops={'edgecolor': 'black'}, radius=0.9,
            textprops={'fontsize': 8})
 axs[1].set_title('Main field of work')
 
@@ -103,7 +105,7 @@ expertise, e_counts = np.unique(
 sort_ids = [5, 0, 3, 1, 2, 4]
 axs[2].pie(e_counts[sort_ids], labels=expertise[sort_ids], autopct='%1.0f%%',
            pctdistance=0.8, startangle=90, colors=colors,
-           wedgeprops={'edgecolor': 'black'}, radius=0.8,
+           wedgeprops={'edgecolor': 'black'}, radius=0.9,
            textprops={'fontsize': 8})
 axs[2].set_title('Years of experience post master')
 
@@ -119,8 +121,9 @@ x = np.arange(1, 5)
 axs[0].scatter(x, df_gt['Cu'], zorder=10, marker='P', s=80, color='black',
                edgecolor='white', label='true value')
 axs[0].scatter(x, average_guess_Cu, zorder=10, marker='o', color='black',
-               s=80, edgecolor='white', label='average estimations')
-df_s['S3_Cu'].replace([np.inf, -np.inf], np.nan, inplace=True)
+               s=80, edgecolor='white', label='average\nbased on estimations')
+for col in ['S0_Cu', 'S1_Cu', 'S2_Cu', 'S3_Cu']:
+    df_s[col] = df_s[col].replace([np.inf, -np.inf], np.nan)
 parts = axs[0].violinplot([df_s['S0_Cu'].dropna(), df_s['S1_Cu'].dropna(),
                            df_s['S2_Cu'].dropna(), df_s['S3_Cu'].dropna()],
                           showextrema=False, showmeans=False, points=20,
@@ -136,12 +139,12 @@ axs[0].set_ylabel('$C_u$')
 axs[0].set_xticks(x)
 axs[0].set_xticklabels(['sample 1', 'sample 2', 'sample 3', 'sample 4'])
 axs[0].tick_params(axis='both', labelsize=8)
-
+axs[0].set_ylim(bottom=0, top=20)
 
 axs[1].scatter(x, df_gt['Cc'], zorder=10, marker='P', s=80, color='black',
                edgecolor='white', label='true value')
 axs[1].scatter(x, average_guess_Cc, zorder=10, marker='o', color='black',
-               s=80, edgecolor='white', label='average estimations')
+               s=80, edgecolor='white', label='average\nbased on estimations')
 
 parts = axs[1].violinplot([df_s['S0_Cc'].dropna(), df_s['S1_Cc'].dropna(),
                            df_s['S2_Cc'].dropna(), df_s['S3_Cc'].dropna()],
@@ -158,6 +161,7 @@ axs[1].set_ylabel('$C_c$')
 axs[1].set_xticks(x)
 axs[1].set_xticklabels(['sample 1', 'sample 2', 'sample 3', 'sample 4'])
 axs[1].tick_params(axis='both', labelsize=8)
+axs[1].set_ylim(bottom=0, top=4)
 
 plt.tight_layout()
 plt.savefig(r'../samples/analyses/result_Cc_Cu.svg')
