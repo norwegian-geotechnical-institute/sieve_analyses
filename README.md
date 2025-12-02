@@ -30,6 +30,7 @@ sieve_analyses
 ├── environment.yaml              - Dependency file to use with conda.
 ├── LICENSE                       - File clarifying the repository's license.
 ├── README.md                     - Descritpion of the repository.
+├── SupplementaryInformation.pdf  - Supplementary Information to the paper: 1. Application Example, 2. description of the Grain Size Distribution characterization survey.
 ```
 
 To clone the repository and have everything set up for you, run:
